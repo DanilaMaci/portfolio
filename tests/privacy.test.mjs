@@ -4,7 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { scanText } from '../scripts/check-privacy.mjs';
 import { scanLog, badIdentities } from '../scripts/check-history.mjs';
-import { tempProject, runScript } from './helpers.mjs';
+import { tempProject, runScript, cleanEnv } from './helpers.mjs';
 
 // Every number and address below is synthetic.
 const hit = (s, deny) => scanText(s, deny).length > 0;
@@ -114,15 +114,23 @@ test('negative control: check-history exits 1 on a number in an old commit, 0 on
 
 // The deny-list in CI comes from the PRIVACY_DENY secret (there is no .private/ there).
 const runWithEnv = (dir, env) => {
-  const r = spawnSync(process.execPath, [resolve('scripts', 'check-privacy.mjs')], { cwd: dir, encoding: 'utf8', env: { ...process.env, ...env } });
+  const r = spawnSync(process.execPath, [resolve('scripts', 'check-privacy.mjs')], { cwd: dir, encoding: 'utf8', env: { ...cleanEnv(), ...env } });
   return { code: r.status, out: r.stdout + r.stderr };
 };
 
-test('CI without a deny-list fails instead of silently skipping it', () => {
+test('GitHub Actions without a deny-list fails instead of silently skipping it', () => {
   const dir = tempProject({ 'notes.md': 'nothing private here' });
-  const r = runWithEnv(dir, { CI: 'true', PRIVACY_DENY: '' });
+  const r = runWithEnv(dir, { CI: 'true', GITHUB_ACTIONS: 'true', PRIVACY_DENY: '' });
   assert.equal(r.code, 1, r.out);
-  assert.match(r.out, /PRIVACY_DENY/);
+  assert.match(r.out, /PRIVACY_DENY secret is set but empty/);
+});
+
+test('the Cloudflare build without a deny-list runs the pattern rules only (owner choice)', () => {
+  const clean = runWithEnv(tempProject({ 'notes.md': 'nothing private here' }), { CI: 'true', CF_PAGES: '1' });
+  assert.equal(clean.code, 0, clean.out);
+  assert.match(clean.out, /WARNING/);
+  const dirty = runWithEnv(tempProject({ 'notes.md': 'mail me: someone@example-private.ie' }), { CI: 'true', CF_PAGES: '1' });
+  assert.equal(dirty.code, 1, 'patterns still catch an email');
 });
 
 test('PRIVACY_DENY secret: a listed value is caught and never printed', () => {

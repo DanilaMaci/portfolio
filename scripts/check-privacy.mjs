@@ -74,14 +74,19 @@ export function scanText(text, deny = []) {
   return text.split('\n').flatMap((line, i) => scanLine(line, deny).map((msg) => ({ line: i + 1, msg })));
 }
 
-// One literal per line (case-insensitive), from .private/deny.txt or, where that file cannot exist (CI, the
-// Cloudflare build), from the PRIVACY_DENY secret: one literal per line, or all on one line separated by | (Cloudflare's
-// secret field is single-line). Without either: a warning locally, but a hard error
-// when CI is set, so a pipeline can never silently run without the deny-list.
+// One literal per line (case-insensitive), from .private/deny.txt or, where that file cannot exist (CI), from the
+// PRIVACY_DENY secret: one literal per line, or all on one line separated by |. Without either: a warning, except in
+// GitHub Actions, where it is a hard error, so CI can never silently run without the deny-list. (The Cloudflare build
+// runs the pattern rules only: the owner chose not to keep the deny-list there; CI and the git hooks cover it.)
 export function loadDeny(env = process.env) {
   const text = existsSync(DENY_FILE) ? readFileSync(DENY_FILE, 'utf8') : env.PRIVACY_DENY;
   if (!text) {
-    if (env.CI) throw new Error(`no deny-list in CI: set the PRIVACY_DENY secret (one literal per line)`);
+    if (env.GITHUB_ACTIONS) {
+      // Variable NAMES only, never values, so a missing or misspelled secret is obvious.
+      const state = 'PRIVACY_DENY' in env ? 'is set but empty' : 'is not set';
+      const similar = Object.keys(env).filter((k) => /deny|privacy/i.test(k) && k !== 'PRIVACY_DENY');
+      throw new Error(`no deny-list in GitHub Actions: the PRIVACY_DENY secret ${state}${similar.length ? `; similar names: ${similar.join(', ')}` : ''}. Add it under Settings → Secrets and variables → Actions.`);
+    }
     console.warn(`WARNING: ${DENY_FILE} not found; only the pattern heuristics run. Create it (gitignored) with one literal per line.`);
     return [];
   }
