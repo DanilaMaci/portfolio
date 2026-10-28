@@ -26,15 +26,26 @@ const check = (name, ok, detail = '') => {
 
 const server = await serve(PORT);
 const profile = mkdtempSync(join(tmpdir(), 'smoke-chrome-')); // scratch outside the project
-const chrome = spawn(chromePath, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${profile}`, '--window-size=1280,860', ...(process.env.CI ? ['--no-sandbox'] : []), 'about:blank'], { stdio: 'ignore' });
+// CI (Linux containers/VMs): no sandbox, no /dev/shm limits, no GPU. Chrome's stderr is kept so a failed start says why.
+const ciFlags = process.env.CI ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [];
+const chrome = spawn(chromePath, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${profile}`, '--window-size=1280,860', ...ciFlags, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+let chromeLog = '';
+let chromeExit = null;
+chrome.stderr.on('data', (d) => (chromeLog += d));
+chrome.on('exit', (code) => (chromeExit = code));
 
 try {
-  let targets;
-  for (let i = 0; i < 60 && !targets; i++) {
+  let page;
+  for (let i = 0; i < 120 && !page && chromeExit === null; i++) {
     await wait(250);
-    try { targets = await (await fetch(`http://127.0.0.1:${CDP}/json`)).json(); } catch {}
+    try { page = (await (await fetch(`http://127.0.0.1:${CDP}/json`)).json()).find((t) => t.type === 'page'); } catch {}
   }
-  const ws = new WebSocket(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
+  if (!page) {
+    console.error(`Chrome did not start (${chromePath}, exit ${chromeExit ?? 'none, timed out after 30 s'}). Its last output:\n${chromeLog.slice(-2000)}`);
+    process.exitCode = 1;
+    throw new Error('no browser');
+  }
+  const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((r) => (ws.onopen = r));
   let id = 0;
   const pending = new Map();
