@@ -75,7 +75,8 @@ export function scanText(text, deny = []) {
 }
 
 // One literal per line (case-insensitive), from .private/deny.txt or, where that file cannot exist (CI, the
-// Cloudflare build), from the PRIVACY_DENY secret (same format). Without either: a warning locally, but a hard error
+// Cloudflare build), from the PRIVACY_DENY secret: one literal per line, or all on one line separated by | (Cloudflare's
+// secret field is single-line). Without either: a warning locally, but a hard error
 // when CI is set, so a pipeline can never silently run without the deny-list.
 export function loadDeny(env = process.env) {
   const text = existsSync(DENY_FILE) ? readFileSync(DENY_FILE, 'utf8') : env.PRIVACY_DENY;
@@ -85,7 +86,7 @@ export function loadDeny(env = process.env) {
     return [];
   }
   return text
-    .split('\n')
+    .split(/\r?\n|\|/)
     .map((l, i) => ({ n: i + 1, text: l.trim() }))
     .filter((d) => d.text);
 }

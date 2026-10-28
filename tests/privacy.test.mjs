@@ -141,3 +141,12 @@ test('commit metadata: only GitHub no-reply author/committer emails pass, and th
   assert.match(bad[0], /author email \(domain private\.example\)/);
   assert.ok(!bad[0].includes('someone@'), 'local part printed');
 });
+
+test('PRIVACY_DENY on one line, entries separated by | (Cloudflare secrets are single-line)', () => {
+  const secret = 'Zebra-Quokka-4417';
+  const dir = tempProject({ 'notes.md': `call me at ${secret} please` });
+  const r = runWithEnv(dir, { CI: 'true', PRIVACY_DENY: `first-unused|${secret}|third` });
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /deny-list entry #2/);
+  assert.ok(!r.out.includes(secret));
+});

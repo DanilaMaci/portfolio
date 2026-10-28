@@ -25,8 +25,9 @@ here runs automatically.
 - [ ] Build command `npm test`, output directory `dist`, production branch `main`. Also set the variable
       `NODE_VERSION=24` (`.nvmrc` should be honoured; the image default is 22, which also works: engines >= 22.12).
       Check the Node version in the first build log.
-- [ ] Settings → Variables and secrets → add `PRIVACY_DENY` as a **Secret** (same lines as above), for Production and
-      Preview. The build fails without it, by design.
+- [ ] Settings → Variables and secrets → add `PRIVACY_DENY` as a **Secret**, for Production and Preview. The field is
+      single-line: put the entries on one line separated by `|` (e.g. `first|second|third`). The build fails without
+      it, by design.
 - [ ] Custom domains → add `danilamacijauskas.dev` (and `www.danilamacijauskas.dev` redirecting to it, optional).
       Needs the zone active on Cloudflare (nameservers switched: done).
 - [ ] DNS hardening (Cloudflare dashboard): DNSSEC → enable, then add the DS record it shows at Blacknight; CAA

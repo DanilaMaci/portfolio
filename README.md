@@ -57,7 +57,8 @@ Expected: `npm test` prints `inline ok` as its last check, and `npm run test:bro
 - **contrast**: text stays readable (WCAG AA: 4.5:1, form borders 3:1) on both backgrounds, in both themes.
 - **privacy**: no phone number, address, personal email or entry from a private deny-list reaches the repo or the
   built site. It is a heuristic (patterns for emails, phones, Eircodes, street addresses) plus the deny-list, read
-  from `.private/deny.txt` (gitignored, one literal per line) or, in CI, from the `PRIVACY_DENY` secret. Not a
+  from `.private/deny.txt` (gitignored, one literal per line) or, in CI, from the `PRIVACY_DENY` secret (one per line,
+  or one line separated by `|`). Not a
   guarantee: read what you publish.
 - **history**: the same rules over every past commit, plus every commit's author and committer email must be a
   GitHub no-reply address, because deleting something later does not remove it from history.
