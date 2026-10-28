@@ -1,0 +1,12 @@
+// Cloudflare Workers deploy config: serve the built site in dist/ as static files. There is no server code, so the
+// _headers rules apply to every response. Deploy command (Cloudflare dashboard → Settings → Build):
+//   npx wrangler@4.150.0 deploy
+{
+  "name": "portfolio", // must match the Worker's name in the Cloudflare dashboard
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page", // unknown URLs get dist/404.html with status 404
+    "html_handling": "auto-trailing-slash" // /projects/x and /projects/x/ both reach projects/x/index.html
+  }
+}

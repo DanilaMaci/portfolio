@@ -78,7 +78,8 @@ Expected: `npm test` prints `inline ok` as its last check, and `npm run test:bro
 
 ## Deploy and security
 
-Cloudflare Pages builds the site with `npm test`, so any failing check blocks a deploy, and no deploy token exists.
+Cloudflare (Workers with static assets, `wrangler.jsonc`) builds the site with `npm test` and deploys only if it
+passes, so any failing check blocks a deploy; Cloudflare pulls from GitHub, so no deploy token exists.
 GitHub Actions runs the same tests plus the browser smoke test on every push (`.github/workflows/ci.yml`: read-only
 permissions, actions pinned to commit SHAs, `npm audit` for runtime dependencies). Git hooks in `.githooks/` stop a
 commit with private data or a non-private author email; enable them once per clone with

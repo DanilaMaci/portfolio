@@ -20,14 +20,15 @@ here runs automatically.
 - [ ] Settings → Rules → protect `main`: require the `ci` check to pass; block force-pushes and deletion.
 - [ ] Settings → Emails: "Keep my email address private" and "Block command line pushes that expose my email" on.
 
-## 2. Cloudflare Pages
-- [ ] Workers & Pages → Create → Pages → connect GitHub, pick the repo (grant access to this repo only).
-- [ ] Build command `npm test`, output directory `dist`, production branch `main`. Also set the variable
+## 2. Cloudflare (Worker with static assets)
+- [x] Workers & Pages → Create → connect GitHub, pick the repo (access to this repo only). Cloudflare made it a
+      Worker; `wrangler.jsonc` tells it to serve `dist/` as static files (no adapter, no server code).
+- [ ] Settings → Build: build command `npm test`; deploy command `npx wrangler@4.150.0 deploy` (pinned); branch `main`. Also set the variable
       `NODE_VERSION=24` (`.nvmrc` should be honoured; the image default is 22, which also works: engines >= 22.12).
       Check the Node version in the first build log.
 - [ ] No deny-list in Cloudflare (my choice, 2026-10-28): its build runs the pattern rules only; the exact deny-list
       is checked by GitHub Actions (secret) and the git hooks.
-- [ ] Custom domains → add `danilamacijauskas.dev` (and `www.danilamacijauskas.dev` redirecting to it, optional).
+- [ ] Settings → Domains & Routes → Add → Custom domain → `danilamacijauskas.dev` (and `www.danilamacijauskas.dev` redirecting to it, optional).
       Needs the zone active on Cloudflare (nameservers switched: done).
 - [ ] DNS hardening (Cloudflare dashboard): DNSSEC → enable, then add the DS record it shows at Blacknight; CAA
       records are optional (Cloudflare manages certificates).
@@ -47,14 +48,14 @@ here runs automatically.
 | Risk | Protection |
 |---|---|
 | Private data in a commit | pre-commit hook + `npm test` privacy check (deny-list from `.private/` or the `PRIVACY_DENY` secret) |
-| Private data in old history | pre-push hook + check-history in GitHub Actions (full clone, merge diffs included). The Pages build likely clones shallow, so its history scan covers little; it still runs the full privacy scan of the files |
+| Private data in old history | pre-push hook + check-history in GitHub Actions (full clone, merge diffs included). The Cloudflare build may clone shallow, so its history scan covers little; it still runs the full privacy scan of the files |
 | Private email in commit metadata | GitHub no-reply address; pre-commit checks the real author/committer (`git var`); check-history checks every commit's author and committer in CI; GitHub's "block pushes that expose my email" as backstop |
 | Script injection / XSS | No inline code (check-inline), strict CSP with Trusted Types, all DOM writes via textContent |
 | Clickjacking, referrer leaks | `frame-ancestors 'none'` + X-Frame-Options, `Referrer-Policy: same-origin` |
 | Malicious dependency update | Exact pins (check-pins), `npm ci` from the lockfile, `npm audit` in CI, actions pinned to SHAs |
-| Leaked deploy credentials | None exist: Pages pulls from GitHub; CI has read-only repo access and only the deny-list secret |
-| Broken page shipped | Pages builds with `npm test`; CI adds the browser smoke test |
-| Hooks skipped (`--no-verify`) | Hooks are a convenience; CI and the Pages build repeat every check |
+| Leaked deploy credentials | None exist: Cloudflare pulls from GitHub; CI has read-only repo access and only the deny-list secret |
+| Broken page shipped | Cloudflare builds with `npm test`; CI adds the browser smoke test |
+| Hooks skipped (`--no-verify`) | Hooks are a convenience; CI and the Cloudflare build repeat the checks |
 
 Accepted risk: in CI the `PRIVACY_DENY` secret is in the environment of the whole `npm test` step, so build-time
 dependencies could read it. They are exact-pinned and audited; splitting the step would duplicate the test recipe.
