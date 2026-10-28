@@ -1,0 +1,62 @@
+---
+import '../styles/tokens.css';
+import '../styles/global.css';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import Terminal from '../components/Terminal.astro';
+import { sections, about, github, linkedin } from '../lib/site';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// Same URLs as the @font-face rules in tokens.css, so the preloaded files are reused, not fetched twice.
+const preloads = ['/fonts/ibm-plex-mono-latin-400-normal.woff2', '/fonts/ibm-plex-sans-latin-400-normal.woff2'];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {/* Link-preview card (scripts/make-og.mjs draws public/og.png from the built home page) */}
+    <meta property="og:image" content={new URL('/og.png', Astro.site).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Danila Macijauskas: engineer with an economist's eye for data." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1b26" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f5f9" />
+    <script is:inline src="/theme-init.js"></script>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <nav aria-label="Main">
+        <ul>
+          <li><a class="brand" href="/">~/danila</a></li>
+          {sections.map(({ id }) => <li><a href={`/#${id}`}>{id}</a></li>)}
+          <li hidden><ThemeToggle class="theme-toggle" /></li>
+          <li hidden><Terminal class="term-open" sections={sections} about={about} github={github} linkedin={linkedin} /></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer">
+      <p>Danila Macijauskas · Static site built with Astro · No cookies, no tracking</p>
+    </footer>
+    <script>
+      import '../scripts/transition.ts';
+    </script>
+  </body>
+</html>

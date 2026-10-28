@@ -1,0 +1,20 @@
+#!/bin/sh
+# Blocks a commit that would publish private data. Enable once per clone: git config core.hooksPath .githooks
+# 1. Author and committer emails are public in git history: only GitHub's no-reply address is allowed. `git var`
+#    gives the identity git will really record (GIT_AUTHOR_EMAIL etc. override user.email). check-history repeats
+#    this over all commits in CI, since `--author=` and `--no-verify` get past a hook.
+for ident in "$(git var GIT_AUTHOR_IDENT)" "$(git var GIT_COMMITTER_IDENT)"; do
+  case "$ident" in
+    *@users.noreply.github.com\>*) ;;
+    *) echo "pre-commit: author/committer email is not a GitHub no-reply address; it would be public in the history." >&2
+       echo "  Set it with: git config user.email <id>+<login>@users.noreply.github.com" >&2
+       exit 1 ;;
+  esac
+done
+# 2. Nothing from .private/ may be staged (it is gitignored; this catches a forced add).
+if git diff --cached --name-only | grep -q '^\.private/'; then
+  echo "pre-commit: a file from .private/ is staged; unstage it." >&2
+  exit 1
+fi
+# 3. Privacy scan (phones, emails, addresses, deny-list) over the repo files and dist/.
+node scripts/check-privacy.mjs || exit 1

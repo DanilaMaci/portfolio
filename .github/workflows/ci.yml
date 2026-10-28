@@ -1,0 +1,36 @@
+# CI: on every push to main and every pull request, run the full test suite, then the browser smoke test.
+# Cloudflare Pages deploys on its own (its build command is `npm test`, so a failing check also blocks the deploy);
+# this workflow therefore holds no deploy token. Its only secret is the privacy deny-list, and it can only read the
+# repo. Third-party actions are pinned to full commit SHAs (a moved tag cannot change what runs).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # check-history scans every commit
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Known vulnerabilities in runtime dependencies (high or worse fails)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Tests and checks (sync, type check, build, unit tests, privacy, history, links, headers)
+        run: npm test
+        env:
+          PRIVACY_DENY: ${{ secrets.PRIVACY_DENY }}
+      - name: Browser smoke test (served with the production headers)
+        run: npm run test:browser

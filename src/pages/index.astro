@@ -1,0 +1,180 @@
+---
+import Base from '../layouts/Base.astro';
+import Photo from '../components/Photo.astro';
+import { Image } from 'astro:assets';
+import { getVisibleProjects } from '../lib/projects';
+import { sections, about, github, linkedin, contactFormEnabled } from '../lib/site';
+import { EMAIL } from '../scripts/terminal/commands.mjs';
+import { story, personal, skills, path } from '../lib/profile';
+
+const projects = await getVisibleProjects();
+// Section headings come from site.ts (the same list feeds the nav and the terminal).
+const title = Object.fromEntries(sections.map((s) => [s.id, s.title]));
+// The hero is a short terminal session. With JS and motion allowed, src/scripts/intro/ types each .cmd from its
+// data-keys (← = backspace, ⇥ = Tab completion); the rest of the hero is visible from the first paint.
+// To edit a command, change its text and data-keys together (tests/intro.test.mjs checks they end the same).
+// Path is drawn like `git log --graph`; each entry's "commit hash" is a hash of its own text (32-bit FNV-1a, as hex),
+// so it stays the same until the entry changes.
+const commit = (e: { title: string; org: string; dates: string }) => {
+  let h = 0x811c9dc5;
+  for (const c of `${e.title}|${e.org}|${e.dates}`) h = Math.imul(h ^ c.charCodeAt(0), 0x01000193) >>> 0;
+  return h.toString(16).padStart(8, '0').slice(0, 7);
+};
+---
+
+<Base
+  title="Danila Macijauskas · Software · Embedded · Data"
+  description="Danila Macijauskas: MSc Computer Science at UCD, looking for software, embedded and data roles from January 2027."
+>
+  <section class="hero" aria-labelledby="name">
+    <Photo class="photo hero-photo" eager />
+    <p class="prompt-line" aria-hidden="true">
+      <span class="prompt-path">~</span> <span class="prompt-sigil">$</span> <span class="cmd" data-keys="whoaim←←mi">whoami</span>
+    </p>
+    <h1 id="name">Danila Macijauskas</h1>
+    <p class="headline">Engineer with an economist's eye for data.</p>
+    <p class="prompt-line" aria-hidden="true">
+      <span class="prompt-path">~</span> <span class="prompt-sigil">$</span> <span class="cmd" data-keys="cat ap⇥">cat approach.txt</span>
+    </p>
+    <p class="lede">
+      I break problems down and build from the bottom up: from the sensor driver on a microcontroller to the
+      dashboard that shows its readings.
+    </p>
+    <p class="availability">Available from January 2027.</p>
+    <p class="actions">
+      {
+        projects.length > 0 ? (
+          <>
+            <a class="button button-primary" href="#projects">See projects</a>
+            <a class="button" href={`mailto:${EMAIL}`}>Email</a>
+          </>
+        ) : (
+          <>
+            <a class="button button-primary" href={`mailto:${EMAIL}`}>Email</a>
+            <a class="button" href={github}>GitHub</a>
+          </>
+        )
+      }
+    </p>
+    <p class="prompt-line prompt-end" aria-hidden="true">
+      <span class="prompt-path">~</span> <span class="prompt-sigil">$</span> <span class="cursor"></span>
+      <button type="button" class="prompt-hint" data-terminal-open tabindex="-1" hidden>click to type a command</button>
+    </p>
+  </section>
+  <script>
+    import '../scripts/intro/intro.ts';
+  </script>
+
+  <section class="section" aria-labelledby="about">
+    <h2 class="section-heading" id="about">{title.about}</h2>
+    <div class="about">
+      <div class="prose">
+        <p>{about} {story.join(' ')}</p>
+        <p>{personal}</p>
+      </div>
+      <Photo class="photo about-photo" />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="projects">
+    <h2 class="section-heading" id="projects">{title.projects}</h2>
+    {
+      projects.length === 0 ? (
+        <p class="empty">
+          None published here yet. Meanwhile, see <a href={github}>github.com/DanilaMaci</a>.
+        </p>
+      ) : (
+        <ul class="projects">
+          {projects.map((p) => (
+            <li class="card project">
+              <p class="card-bar" aria-hidden="true">
+                <span class="dot" />
+                <span class="dot" />
+                <span class="dot" />
+                ~/projects/{p.id}
+              </p>
+              {p.data.image ? (
+                <Image class="card-image" src={p.data.image} alt="" widths={[480, 960]} sizes="(min-width: 48rem) 29rem, 100vw" />
+              ) : (
+                <div class="card-image card-image-fallback" aria-hidden="true">&gt;_</div>
+              )}
+              <div class="card-body">
+                <h3 class="card-title">
+                  <a href={`/projects/${p.id}/`}>{p.data.title}</a>
+                </h3>
+                {p.data.draft && <p class="badge-draft">draft (dev only)</p>}
+                <p class="tags">
+                  {p.data.tracks.map((t) => (
+                    <span class="tag">{t}</span>
+                  ))}
+                </p>
+                <p>{p.data.summary}</p>
+                <p class="stack">{p.data.stack.join(' / ')}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+
+  <section class="section" aria-labelledby="path">
+    <h2 class="section-heading" id="path">{title.path}</h2>
+    <ol class="timeline">
+      {
+        path.map((e, i) => (
+          <li>
+            <h3 class="item-title">
+              <span class="commit" aria-hidden="true">{commit(e)}</span>
+              {i === 0 && <span class="head" aria-hidden="true">(HEAD -&gt; main)</span>} {e.title}
+            </h3>
+            <p class="item-meta">
+              <span>{e.org}</span> <span class="item-dates">{e.dates}</span>
+            </p>
+            {e.line && <p class="item-text">{e.line}</p>}
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="section" aria-labelledby="skills">
+    <h2 class="section-heading" id="skills">{title.skills}</h2>
+    <ul class="skill-lines">
+      {
+        skills.map((s) => (
+          <li>
+            <span class="label">{s.track}</span> <span>{s.line}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="section" aria-labelledby="contact">
+    <h2 class="section-heading" id="contact">{title.contact}</h2>
+    <div class="contact">
+      <div class="contact-mail">
+        <p>Email is the quickest way to reach me.</p>
+        <p class="actions">
+          <a class="button button-primary" href={`mailto:${EMAIL}`}>Email me</a>
+          <code>{EMAIL}</code>
+        </p>
+        <p>Or message me on <a href={linkedin}>LinkedIn</a>.</p>
+      </div>
+      {
+        contactFormEnabled && (
+          <form class="contact-form" action="/api/contact" method="post" data-pending>
+            <label for="cf-name">Name</label>
+            <input id="cf-name" name="name" type="text" autocomplete="name" required />
+            <label for="cf-email">Email</label>
+            <input id="cf-email" name="email" type="email" autocomplete="email" required />
+            <label for="cf-message">Message</label>
+            <textarea id="cf-message" name="message" rows="6" required></textarea>
+            <button type="submit">Send message</button>
+          </form>
+        )
+      }
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,284 @@
+/* Layout and element styles. Only var(--...) values for colours and fonts (tokens.css owns the literals).
+   Mobile first: base rules are for small screens; @media (min-width: ...) blocks add the wide layout. */
+
+/* Height of the nav. Phones: two fixed rows (the five section links, then the two JS-only buttons), and the header
+   scrolls away with the page (a sticky two-row header took too much of a small screen). From 48rem: one row, sticky.
+   The height never depends on the buttons, so nothing moves when JS un-hides them. scroll-padding-top keeps an anchor
+   jump from hiding the section heading under the sticky nav. */
+:root { --nav-h: 5.5rem; }
+@media (min-width: 48rem) { :root { --nav-h: 3.5rem; } }
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: var(--space-3); }
+@media (min-width: 48rem) { html { scroll-padding-top: calc(var(--nav-h) + var(--space-3)); } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3, h4, code, .prompt-line, .button, .tags, .stack, .label, nav, label, button, .item-meta, .badge-draft {
+  font-family: var(--font-mono);
+}
+h1, h2, h3, h4 { font-weight: 600; line-height: 1.25; margin: 0; }
+p { margin: 0 0 var(--space-3); }
+code { font-size: 0.95em; }
+
+a { color: var(--color-link); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 2px; }
+
+.skip-link { position: absolute; left: -999px; top: var(--space-2); z-index: 2; }
+.skip-link:focus { left: var(--space-2); background: var(--color-surface); padding: var(--space-2) var(--space-3); }
+
+/* ---------- Header / nav ---------- */
+.site-header {
+  height: var(--nav-h);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+/* Phones: a 5-column grid. Row 1 = the five section links; row 2 = theme toggle (under columns 1-2) and terminal
+   (under 3-5). Columns are sized by the links, and the buttons fit their spans, so the grid is the same with or
+   without them. */
+.site-header ul {
+  list-style: none; margin: 0 auto; padding: var(--space-1) var(--space-3);
+  max-width: var(--page-width); height: 100%;
+  display: grid; grid-template-columns: repeat(5, auto); grid-template-rows: 1fr 1fr;
+  justify-content: space-between; align-items: center;
+}
+.site-header a {
+  display: flex; align-items: center; min-height: 2.5rem;
+  font-size: var(--text-sm); color: var(--color-text); text-decoration: none;
+}
+.site-header a:hover { color: var(--color-link); text-decoration: underline; }
+.site-header .brand { color: var(--color-accent); font-weight: 600; }
+.site-header li:first-child { display: none; } /* brand: the hero already shows the name on phones */
+.site-header li:has(.theme-toggle) { grid-area: 2 / 1 / 3 / 3; }
+.site-header li:has(.term-open) { grid-area: 2 / 3 / 3 / 6; justify-self: end; }
+@media (min-width: 48rem) {
+  .site-header { position: sticky; top: 0; z-index: 1; }
+  .site-header ul { display: flex; gap: var(--space-3); padding: 0 var(--space-4); }
+  .site-header li:first-child { display: block; margin-right: auto; }
+}
+
+/* ---------- Page frame ---------- */
+main, .site-footer { max-width: var(--page-width); margin: 0 auto; padding: 0 var(--space-3); }
+@media (min-width: 40rem) { main, .site-footer { padding: 0 var(--space-4); } }
+.site-footer {
+  margin-top: var(--space-5); padding-bottom: var(--space-4);
+  color: var(--color-muted); font-size: var(--text-sm);
+}
+.site-footer p { padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.prose { max-width: var(--measure); }
+
+.section { padding-top: var(--space-5); }
+.section-heading { scroll-margin-top: var(--space-3); font-size: var(--text-lg); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
+.prompt-path { color: var(--color-accent); }
+.prompt-sigil { color: var(--color-muted); }
+
+/* ---------- Hero ---------- */
+.hero { padding-top: var(--space-5); }
+.prompt-line { color: var(--color-muted); font-size: var(--text-sm); margin-bottom: var(--space-2); }
+.hero h1 { font-size: clamp(1.5rem, 8vw, var(--text-xl)); margin-bottom: var(--space-3); } /* name fits one line at 360px */
+.headline { font-size: var(--text-lg); font-weight: 600; color: var(--color-accent); margin-bottom: var(--space-3); }
+.lede { font-size: var(--text-lg); max-width: 40ch; color: var(--color-text); }
+.availability { color: var(--color-muted); }
+.hero-links { list-style: none; padding: 0; margin: var(--space-4) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-family: var(--font-mono); }
+.hero-links a { display: inline-block; padding: var(--space-1) 0; }
+@media (min-width: 40rem) {
+  .hero { padding-top: 6rem; }
+  .hero h1 { font-size: var(--text-2xl); }
+}
+.hero .prompt-line ~ .prompt-line { margin-top: var(--space-4); }
+.headline, .lede { text-wrap: balance; } /* no lone last word */
+
+/* The last prompt line opens the terminal: its hint button covers the whole line (::after). */
+.prompt-end { position: relative; }
+.prompt-hint {
+  margin-left: var(--space-2); padding: 0; background: none; border: 0; cursor: pointer;
+  font: inherit; color: var(--color-muted);
+}
+.prompt-hint::after { content: ''; position: absolute; inset: 0; }
+.prompt-end:hover .prompt-hint { color: var(--color-link); text-decoration: underline; }
+
+/* The block cursor. While typing it stays solid; afterwards it blinks for 5 s and then stays solid (WCAG 2.2.2: no
+   blinking that goes on longer than 5 s). */
+.cursor { display: inline-block; width: 0.6em; height: 1.15em; vertical-align: text-bottom; background: var(--color-accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .cursor:not(.typing) { animation: blink 1s steps(1) 5; }
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Hero intro (src/scripts/intro/): only the commands are typed; everything else shows from the first paint.
+   data-intro is set before the first paint by public/theme-init.js; the script adds .shown to a command as it starts
+   typing it. Hidden commands keep their space (visibility, not display), so nothing moves.
+   Fallback: if the script never runs, the commands appear after 2 s anyway. */
+html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-fallback 0s 2s forwards; }
+@keyframes intro-fallback { to { visibility: visible; } }
+
+/* ---------- Cards, lists ---------- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+.card-title { font-size: var(--text-base); margin-bottom: var(--space-2); }
+.label { color: var(--color-muted); font-size: var(--text-sm); margin-right: var(--space-2); }
+
+/* Buttons (links styled as buttons): the primary one is outlined in the accent colour. No filled variant: there is
+   no "text on accent" token, and text may not use a background token. */
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.hero .actions { margin-top: var(--space-4); }
+.button {
+  display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 var(--space-3);
+  color: var(--color-text); text-decoration: none;
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius);
+}
+.button:hover { color: var(--color-link); border-color: var(--color-link); }
+.button-primary { color: var(--color-accent); border: 2px solid var(--color-accent); font-weight: 600; }
+
+/* ---------- About, skills ---------- */
+/* The photo: in About below 64rem, in the hero (right of the name) from 64rem; Photo.astro renders both and only one
+   is displayed. The About photo column exists only when an image was rendered, so there is no gap without one. */
+.about { display: grid; gap: var(--space-4); }
+.photo { display: block; height: auto; }
+.about-photo { width: 8rem; border-radius: var(--radius); border: 1px solid var(--color-border); }
+.hero-photo { display: none; }
+@media (min-width: 48rem) {
+  .about:has(.about-photo) { grid-template-columns: minmax(0, var(--measure)) 10rem; align-items: start; }
+  .about-photo { width: 10rem; }
+}
+/* Hero photo: blended into the page (tinted by the background, soft round edge, faded) and coming forward on hover.
+   Positioned, not in the flow, so the hero text lays out exactly as without it. */
+@media (min-width: 64rem) {
+  .about-photo { display: none; }
+  .about:has(.about-photo) { grid-template-columns: minmax(0, var(--measure)); }
+  .hero { position: relative; }
+  .hero-photo {
+    display: block; position: absolute; right: 0; top: 7rem; width: 16rem;
+    mask-image: radial-gradient(closest-side, var(--color-bg) 70%, transparent);
+    mix-blend-mode: luminosity; opacity: 0.7;
+  }
+  .hero-photo:hover { mix-blend-mode: normal; opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) { .hero-photo { transition: opacity 0.4s ease; } }
+.about .prose p:last-child { margin-bottom: 0; }
+.skill-lines { list-style: none; margin: 0; padding: 0; max-width: var(--measure); }
+/* Two columns (track | list) so a wrapped list stays aligned under itself. */
+.skill-lines li { display: grid; grid-template-columns: 9ch 1fr; column-gap: var(--space-2); padding: var(--space-1) 0; }
+.skill-lines .label { margin: 0; color: var(--color-accent); font-size: var(--text-base); font-weight: 600; }
+
+/* Path, drawn like `git log --graph`: the graph line is a CSS border, each entry's "*" sits on it (with the page
+   background behind it, so the line breaks around the star), then the commit hash and the title. */
+.timeline { list-style: none; margin: 0 0 0 0.5ch; padding: 0; }
+.timeline > li { position: relative; border-left: 1px solid var(--color-border); padding: 0 0 var(--space-4) var(--space-3); }
+.timeline > li:last-child { padding-bottom: 0; border-left-color: transparent; }
+.timeline > li::before {
+  content: '*'; position: absolute; left: -0.5ch; top: 0; width: 1ch; text-align: center;
+  font-family: var(--font-mono); font-weight: 600; line-height: 1.25; color: var(--color-accent); background: var(--color-bg);
+}
+.item-title { font-size: var(--text-base); }
+.commit { color: var(--color-warning); font-weight: 400; margin-right: 1ch; }
+.head { color: var(--color-success); font-weight: 400; margin-right: 1ch; }
+.item-meta { color: var(--color-muted); font-size: var(--text-sm); margin: var(--space-1) 0 var(--space-2); display: flex; flex-wrap: wrap; column-gap: var(--space-3); }
+.item-text { max-width: var(--measure); }
+.item-text:last-child { margin-bottom: 0; }
+
+/* ---------- Projects ---------- */
+.projects { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+@media (min-width: 48rem) { .projects { grid-template-columns: repeat(2, 1fr); } }
+/* Cards: picture on top, then text. The title link covers the whole card (its ::after), so the card is one big
+   click target while the markup has a single link. */
+.project { position: relative; padding: 0; overflow: hidden; }
+.project:hover, .project:focus-within { border-color: var(--color-accent); }
+.card-title a::after { content: ''; position: absolute; inset: 0; }
+.card-body { padding: var(--space-3); }
+.card-image { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: top; border-bottom: 1px solid var(--color-border); }
+.card-title a { text-decoration: none; }
+.project:hover .card-title a, .card-title a:focus-visible { text-decoration: underline; }
+.card-image-fallback {
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: var(--text-xl); color: var(--color-muted); background: var(--color-bg);
+}
+/* Window title bar on each card: three dots and the project's path. */
+.card-bar {
+  display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-1) var(--space-3);
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+.card-bar .dot { width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--color-error); }
+.card-bar .dot:nth-child(2) { background: var(--color-warning); }
+.card-bar .dot:nth-child(3) { background: var(--color-success); margin-right: var(--space-1); }
+@media (prefers-reduced-motion: no-preference) {
+  img.card-image { transition: transform 0.3s ease; }
+  .project:hover img.card-image { transform: scale(1.03); }
+}
+.tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.tag { font-size: var(--text-sm); color: var(--color-accent); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 var(--space-2); }
+.stack { color: var(--color-muted); font-size: var(--text-sm); }
+.badge-draft { color: var(--color-warning); font-size: var(--text-sm); }
+.empty a { overflow-wrap: anywhere; }
+
+.project-title { font-size: var(--text-xl); margin: var(--space-2) 0 var(--space-3); }
+.project-image { display: block; width: 100%; height: auto; margin: var(--space-4) 0; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.project-image-fallback {
+  margin: var(--space-4) 0; padding: var(--space-5) var(--space-3); text-align: center;
+  font-family: var(--font-mono); color: var(--color-muted);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius);
+}
+.label-heading { font-size: var(--text-base); color: var(--color-accent); margin: var(--space-4) 0 var(--space-2); }
+.media { margin: 0 0 var(--space-4); }
+.media img, .media video { display: block; width: 100%; height: auto; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
+.media figcaption { margin-top: var(--space-2); color: var(--color-muted); font-size: var(--text-sm); max-width: var(--measure); }
+
+/* ---------- Contact ---------- */
+.contact { display: grid; gap: var(--space-4); }
+@media (min-width: 48rem) { .contact:has(.contact-form) { grid-template-columns: 1fr 1.4fr; align-items: start; } }
+.contact code { overflow-wrap: anywhere; color: var(--color-text); }
+.contact-form { display: flex; flex-direction: column; gap: var(--space-2); }
+.form-note { color: var(--color-warning); font-family: var(--font-mono); font-size: var(--text-sm); }
+.contact-form label { font-size: var(--text-sm); margin-top: var(--space-2); }
+.contact-form input, .contact-form textarea, .contact-form button {
+  font: inherit; font-size: var(--text-base); /* >= 16px: no zoom-on-focus on phones */
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+.contact-form textarea { resize: vertical; }
+.contact-form button { font-family: var(--font-mono); align-self: flex-start; margin-top: var(--space-3); cursor: pointer; }
+.contact-form button:disabled { color: var(--color-muted); cursor: not-allowed; }
+
+/* Terminal button in the nav: looks like the other nav links (the theme switch styles itself in ThemeToggle.astro). */
+.site-header .term-open {
+  display: flex; align-items: center; min-height: 2.5rem; padding: 0;
+  font: inherit; font-size: var(--text-sm); color: var(--color-text);
+  background: none; border: 0; cursor: pointer;
+}
+.site-header .term-open:hover { color: var(--color-link); text-decoration: underline; }
+
+/* ---------- Page transition (src/scripts/transition.ts) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.25s; }
+}
+.boot {
+  position: fixed; inset: 0; z-index: 3; margin: 0;
+  padding: var(--space-5) max(var(--space-3), calc((100vw - var(--page-width)) / 2 + var(--space-4))); /* page column */
+  isolation: isolate; color: var(--color-text); font-family: var(--font-mono); font-size: var(--text-sm);
+}
+/* the page stays visible, dimmed, behind the log: a background-coloured layer at 93 % opacity */
+.boot::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-bg); opacity: 0.93; }
+.boot p { margin: 0 0 var(--space-1); white-space: pre; }
+.boot-ok { color: var(--color-success); }

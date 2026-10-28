@@ -1,0 +1,14 @@
+---
+// The small profile photo in the About section: the first image in src/assets/profile/ (any file name; jpg, jpeg,
+// png or webp). import.meta.glob returns an empty object when nothing matches, so without a file this outputs
+// nothing (no placeholder, no empty box, nothing copied into dist).
+// Used twice on the home page: in the hero on wide screens (eager: above the fold) and in About on phones; CSS shows
+// one of them (display:none also hides the other from screen readers).
+import { Image } from 'astro:assets';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('/src/assets/profile/*.{jpg,jpeg,png,webp}', { eager: true });
+const photo = Object.values(files)[0]?.default;
+const { class: className = 'photo', eager = false } = Astro.props as { class?: string; eager?: boolean };
+---
+
+{photo && <Image class={className} src={photo} alt="Danila Macijauskas" widths={[320, 640]} sizes="(min-width: 64rem) 16rem, 10rem" loading={eager ? 'eager' : 'lazy'} />}

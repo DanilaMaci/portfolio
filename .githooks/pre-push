@@ -1,0 +1,3 @@
+#!/bin/sh
+# Last check before anything leaves this machine: the privacy rules over every commit in the history.
+node scripts/check-history.mjs || exit 1

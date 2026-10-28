@@ -1,0 +1,100 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getVisibleProjects } from '../../lib/projects';
+
+// One page per visible project: live ones in the build, plus drafts in `npm run dev`.
+export const getStaticPaths = (async () => {
+  const projects = await getVisibleProjects();
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}) satisfies GetStaticPaths;
+
+const { project } = Astro.props;
+const d = project.data;
+const { Content } = await render(project);
+const poster = d.video?.poster && (await getImage({ src: d.video.poster, width: 1200 })).src;
+const wide = '(min-width: 62rem) 60rem, 100vw';
+---
+
+<Base title={`${d.title} · Danila Macijauskas`} description={d.summary}>
+  <article class="section project-page">
+    <p class="prompt-line">
+      <a href="/#projects"><span aria-hidden="true">$ </span>cd ../projects</a>
+    </p>
+    <h1 class="project-title">{d.title}</h1>
+    {d.draft && <p class="badge-draft">draft (dev only, not in the build)</p>}
+    <p class="tags">
+      {d.tracks.map((t) => <span class="tag">{t}</span>)}
+    </p>
+    <p class="lede prose">{d.summary}</p>
+    <ul class="hero-links">
+      {d.live && <li><a href={d.live}>Try it live</a></li>}
+      {d.repo && <li><a href={d.repo}>Source code</a></li>}
+      {d.links?.map((l) => <li><a href={l.url}>{l.label}</a></li>)}
+    </ul>
+
+    {
+      d.image && d.imageAlt ? (
+        <Image class="project-image" src={d.image} alt={d.imageAlt} widths={[400, 800, 1200]} sizes={wide} />
+      ) : (
+        <div class="project-image-fallback" aria-hidden="true">~/projects/{project.id}</div>
+      )
+    }
+
+    <div class="prose">
+      <h2 class="label-heading">Problem</h2>
+      <p>{d.problem}</p>
+      <h2 class="label-heading">My role</h2>
+      <p>{d.role}</p>
+      {
+        d.result && (
+          <>
+            <h2 class="label-heading">Result</h2>
+            <p>{d.result}</p>
+          </>
+        )
+      }
+    </div>
+    {
+      d.video && (
+        <>
+          <h2 class="label-heading">Demo</h2>
+          <figure class="media">
+            <video controls preload="none" playsinline poster={poster}>
+              <source src={d.video.src} type={`video/${d.video.src.split('.').pop()}`} />
+              {d.video.captions && <track kind="captions" src={d.video.captions} srclang="en" label="English" default />}
+            </video>
+            <figcaption>{d.video.caption}</figcaption>
+          </figure>
+        </>
+      )
+    }
+    {
+      d.gallery && (
+        <>
+          <h2 class="label-heading">Screenshots</h2>
+          {d.gallery.map((g) => (
+            <figure class="media">
+              <Image src={g.image} alt={g.alt} widths={[400, 800, 1200]} sizes={wide} />
+              {g.caption && <figcaption>{g.caption}</figcaption>}
+            </figure>
+          ))}
+        </>
+      )
+    }
+    <div class="prose">
+      {
+        project.body?.trim() && (
+          <>
+            <h2 class="label-heading">Notes</h2>
+            <Content />
+          </>
+        )
+      }
+      <h2 class="label-heading">Stack</h2>
+      <p class="stack">{d.stack.join(' / ')}</p>
+    </div>
+  </article>
+</Base>

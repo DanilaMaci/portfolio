@@ -1,0 +1,31 @@
+# HTTP response headers (Cloudflare Pages reads this file from the build output; scripts/serve-dist.mjs applies the
+# same rules locally, and docs/deploy.md has the nginx equivalent for the Raspberry Pi). Tested by
+# tests/headers.test.mjs (policy) and scripts/smoke-browser.mjs (no violations in a real browser).
+#
+# Content-Security-Policy: everything is denied unless listed. Scripts, styles, images, fonts and media come only
+#   from this site; no inline code (the build is checked for that by check-inline); no frames, plugins or <base>.
+#   require-trusted-types-for: the browser refuses HTML-string sinks such as innerHTML (the site never uses them).
+# Referrer-Policy same-origin: other sites get no referrer; pages of this site do (the hero intro reads it).
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests; require-trusted-types-for 'script'
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), browsing-topics=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-Frame-Options: DENY
+
+# Hashed build files never change under the same name: cache for a year.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fonts are pinned versions; rename a file if it ever changes.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Preview copies on *.pages.dev must not compete with the real domain in search results.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

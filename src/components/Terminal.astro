@@ -1,0 +1,73 @@
+---
+// Optional terminal: a nav button (its nav item is hidden until the script runs), the dialog, and the data the script reads.
+// Props are build-time data; the layout passes the same sections const and about sentence the page uses.
+import { getVisibleProjects } from '../lib/projects';
+import { jsonForScript } from '../scripts/terminal/commands.mjs';
+import { skills, path } from '../lib/profile';
+
+interface Props {
+  sections: { id: string; title: string }[];
+  about: string;
+  github: string;
+  linkedin: string;
+  class?: string;
+}
+const { sections, about, github, linkedin, class: className } = Astro.props;
+const projects = (await getVisibleProjects()).map((p) => ({ title: p.data.title, slug: p.id, summary: p.data.summary }));
+const now = `${path[0].title}, ${path[0].org}`; // for the hidden neofetch command
+const data = jsonForScript({ sections, projects, about, github, linkedin, skills, now });
+const suggestions = ['help', 'ls', 'about', 'projects', 'contact'];
+---
+
+<button type="button" class={className} data-terminal-open title="Open the terminal (Ctrl+`)" aria-haspopup="dialog">&gt;_ Terminal</button>
+
+<dialog class="term" aria-label="Terminal" data-terminal>
+  <div class="term-bar">
+    <p class="term-title">Terminal</p>
+    <button type="button" class="term-close" data-term-close>Close<span class="term-close-more"> terminal (back to normal view)</span></button>
+  </div>
+  <div class="term-log" role="log" aria-label="Terminal output" tabindex="0"></div>
+  <div class="term-suggest">
+    <span>Try:</span>
+    {suggestions.map((c) => <button type="button" data-cmd={c}>{c}</button>)}
+  </div>
+  <form class="term-form" autocomplete="off">
+    <label for="term-input"><span aria-hidden="true">$</span><span class="term-sr">Type a command</span></label>
+    <input id="term-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+  </form>
+  <script type="application/json" id="terminal-data" set:html={data} />
+</dialog>
+
+<script>
+  import '../scripts/terminal/terminal.ts';
+</script>
+
+<style is:global>
+  button[hidden], li[hidden] { display: none; }
+  .term { width: min(48rem, 100%); max-width: 100%; height: min(36rem, 90dvh); padding: 0; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border-strong); border-radius: var(--radius); font-family: var(--font-mono); font-size: var(--text-sm); }
+  .term[open] { display: flex; flex-direction: column; }
+  .term::backdrop { background: var(--color-bg); opacity: 0.8; }
+  .term-bar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+  .term-bar .term-title { margin: 0; font-size: var(--text-base); }
+  .term button { font: inherit; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius); padding: var(--space-1) var(--space-2); cursor: pointer; }
+  .term-log { flex: 1; overflow-y: auto; padding: var(--space-3); }
+  .term-log p { margin: 0 0 var(--space-1); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .term-log .term-echo { color: var(--color-muted); }
+  .term-log .term-pre { white-space: pre; overflow-wrap: normal; } /* neofetch: keep the logo column aligned */
+  .term-log { overflow-x: auto; }
+  .term-log a { color: var(--color-link); }
+  .term-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-top: 1px solid var(--color-border); }
+  .term-form { margin: 0; display: flex; align-items: center; border-top: 1px solid var(--color-border-strong); background: var(--color-surface); }
+  .term-form label { display: flex; align-items: center; gap: var(--space-2); padding: 0 0 0 var(--space-3); color: var(--color-accent); }
+  .term-form input { flex: 1; min-width: 0; box-sizing: border-box; margin: 0; padding: var(--space-2) var(--space-3); font: inherit; color: var(--color-text); background: var(--color-surface); border: 0; }
+  /* No visible focus box around the input (it did not fit the row); the caret plus an accent line above the row show
+     focus. The transparent outline still appears in forced-colors (Windows High Contrast) mode. */
+  .term-form input:focus-visible { outline: 2px solid transparent; outline-offset: -2px; }
+  .term-form:focus-within { border-top-color: var(--color-accent); }
+  .term-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (pointer: coarse) { .term-suggest button { min-height: 2.75rem; } } /* finger-sized */
+  @media (max-width: 39.99rem) {
+    .term-close-more { display: none; } /* "Close" fits on one line on phones */
+    .term { inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; border: 0; border-radius: 0; }
+  }
+</style>

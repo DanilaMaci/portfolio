@@ -1,0 +1,58 @@
+---
+// Light/dark switch for the nav. Its nav item (the li in Base.astro) is hidden until the script runs, so no JS = no
+// dead button. Both words are always visible and the current one is highlighted, so it reads as a switch and the nav
+// never reflows. Screen readers get a switch whose name starts with the visible words (WCAG 2.5.3, so voice control
+// works with "click dark light") and that is on when the dark theme is.
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<button type="button" role="switch" aria-checked="true" aria-label="dark / light: dark theme" class={className} data-theme-toggle>
+  <span data-opt="dark">dark</span><span class="sep" aria-hidden="true">/</span><span data-opt="light">light</span>
+</button>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const root = document.documentElement;
+  const isDark = () => (root.dataset.theme ? root.dataset.theme === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches);
+
+  // After a click, keep the browser UI colour in step (theme-init.js does the same for a stored choice at load).
+  function syncThemeColor() {
+    const bg = getComputedStyle(root).getPropertyValue('--color-bg').trim();
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', bg));
+  }
+  const refresh = () => button?.setAttribute('aria-checked', String(isDark()));
+
+  if (button) {
+    button.closest('li')?.removeAttribute('hidden');
+    refresh();
+    button.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('theme', next);
+      } catch {
+        // storage blocked: the choice lasts until the page closes
+      }
+      syncThemeColor();
+      refresh();
+    });
+    // With no stored choice the device setting rules, so follow it live.
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', refresh);
+  }
+</script>
+
+<style>
+  /* Looks like the other nav links; the current theme is the highlighted word. */
+  button {
+    display: flex; align-items: center; gap: var(--space-1); min-height: 2.5rem; padding: 0;
+    font: inherit; font-size: var(--text-sm); color: var(--color-muted); white-space: nowrap;
+    background: none; border: 0; cursor: pointer;
+  }
+  span[data-opt] { padding: 0 var(--space-1); border: 1px solid transparent; border-radius: var(--radius); }
+  button[aria-checked='true'] [data-opt='dark'],
+  button[aria-checked='false'] [data-opt='light'] { color: var(--color-accent); border-color: var(--color-accent); }
+  button:hover span[data-opt] { text-decoration: underline; }
+</style>

@@ -1,0 +1,25 @@
+# Private working notes: never commit or publish
+.private/
+node_modules/
+dist/
+.astro/
+reports/
+.DS_Store
+# Secrets and local deploy state: never commit
+.env
+.env.*
+.dev.vars
+.wrangler/
+*.pem
+*.key
+
+# Internal working notes: kept on this machine, not part of the public repo
+CLAUDE.md
+STATE.md
+docs/briefs/
+docs/reviews/
+docs/handoff.md
+docs/handoff/
+docs/research/
+DECISIONS.md
+docs/design.md
