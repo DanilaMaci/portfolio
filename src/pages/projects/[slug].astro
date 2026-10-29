@@ -16,6 +16,13 @@ const d = project.data;
 const { Content } = await render(project);
 const poster = d.video?.poster && (await getImage({ src: d.video.poster, width: 1200 })).src;
 const wide = '(min-width: 62rem) 60rem, 100vw';
+// Gallery pictures: `sizes` also sets the displayed width, so cap it at the file's own width (no upscaling).
+// The width comes from getImage (same widths as <Image>, so no extra files): reading g.image.width directly would
+// make Astro copy the original file into the build as well.
+const galleryWidths = await Promise.all(
+  (d.gallery ?? []).map(async (g) => (await getImage({ src: g.image, widths: [400, 800, 1200] })).attributes.width),
+);
+const upTo = (w: number) => `(min-width: 62rem) min(60rem, ${w}px), min(100vw, ${w}px)`;
 ---
 
 <Base title={`${d.title} · Danila Macijauskas`} description={d.summary}>
@@ -75,9 +82,9 @@ const wide = '(min-width: 62rem) 60rem, 100vw';
       d.gallery && (
         <>
           <h2 class="label-heading">Screenshots</h2>
-          {d.gallery.map((g) => (
+          {d.gallery.map((g, i) => (
             <figure class="media">
-              <Image src={g.image} alt={g.alt} widths={[400, 800, 1200]} sizes={wide} />
+              <Image src={g.image} alt={g.alt} widths={[400, 800, 1200]} sizes={upTo(galleryWidths[i])} />
               {g.caption && <figcaption>{g.caption}</figcaption>}
             </figure>
           ))}

@@ -46,3 +46,17 @@ test('draft projects (titles and images) do not appear in dist/', () => {
     assert.ok(!existsSync(`dist/media/${p.slug}`), `${p.file}: dist/media/${p.slug}/ exists but the project is a draft`);
   }
 });
+
+// Project pictures ship only as resized webp (<stem>.<hash>_<id>.webp). The original (<stem>.<hash>.jpg/png, same
+// extension as the source) is copied when a page reads the image's metadata directly (e.g. `image.width` in a template).
+test('project images are not copied to dist/ as originals', () => {
+  assert.ok(existsSync('dist/index.html'), 'run the build first');
+  const assets = existsSync('dist/_astro') ? readdirSync('dist/_astro') : [];
+  for (const p of projects())
+    for (const image of p.images) {
+      const ext = image.split('.').pop();
+      const stem = basename(image).replace(/\.[^.]+$/, '');
+      const original = (a) => a.startsWith(stem + '.') && a.endsWith('.' + ext);
+      assert.ok(!assets.some(original), `${p.file}: original of ${stem} found in dist/_astro`);
+    }
+});
