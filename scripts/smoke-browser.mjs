@@ -2,6 +2,7 @@
 // headless Chrome over the DevTools protocol. Covers the behaviour unit tests cannot: the DOM glue (intro, theme
 // switch, terminal, page transition) and that the Content-Security-Policy blocks nothing the site needs.
 //   npm run build && npm run test:browser      (CI runs it after `npm test`)
+//   SMOKE_URL=https://danilamacijauskas.dev npm run test:browser      (the live site, after a deploy)
 // Chrome: $CHROME_PATH, else the usual macOS/Linux locations. Exit code 1 on any failure.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
@@ -11,12 +12,13 @@ import { serve } from './serve-dist.mjs';
 
 const CHROMES = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
 const chromePath = CHROMES.find((p) => p && existsSync(p));
-if (!existsSync('dist/index.html')) throw new Error('dist/ is missing: run `npm run build` first');
+const live = process.env.SMOKE_URL?.replace(/\/$/, '');
+if (!live && !existsSync('dist/index.html')) throw new Error('dist/ is missing: run `npm run build` first');
 if (!chromePath) throw new Error('Chrome not found: set CHROME_PATH');
 
 const PORT = 4710;
 const CDP = 9450;
-const base = `http://127.0.0.1:${PORT}`;
+const base = live ?? `http://127.0.0.1:${PORT}`;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const failures = [];
 const check = (name, ok, detail = '') => {
@@ -24,7 +26,7 @@ const check = (name, ok, detail = '') => {
   if (!ok) failures.push(name);
 };
 
-const server = await serve(PORT);
+const server = live ? { close() {} } : await serve(PORT);
 const profile = mkdtempSync(join(tmpdir(), 'smoke-chrome-')); // scratch outside the project
 // CI (Linux containers/VMs): no sandbox, no /dev/shm limits, no GPU. Chrome's stderr is kept so a failed start says why.
 const ciFlags = process.env.CI ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [];
