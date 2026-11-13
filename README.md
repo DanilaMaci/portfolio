@@ -87,11 +87,12 @@ commit with private data or a non-private author email; enable them once per clo
 
 ## Status
 
-- **Works**: home page, project pages, 404, dark/light themes, typing intro, optional terminal, page transitions;
-  `npm test` (about 100 unit tests plus checks) and the browser smoke test pass; Lighthouse 100 in all four categories on
-  mobile and desktop (local build, 2026-10-28).
-- **Not yet**: no project is published (all drafts until live); the contact form is planned (email link for now);
-  the site is not deployed yet.
+- **Works**: live at https://danilamacijauskas.dev; home page, project pages, 404, dark/light themes, typing intro,
+  optional terminal, page transitions; `npm test` (about 100 unit tests plus checks) and the browser smoke test pass;
+  Lighthouse 100 in all four categories on mobile and desktop (local build, 2026-10-28).
+- **Published projects**: mould risk monitor, Irish investing planner; the others stay drafts until they are live or
+  public.
+- **Not yet**: the contact form is planned (email link for now).
 - **Limits**: tested in Chrome (headless) only, not yet in Safari, Firefox or with a screen reader; page transitions
   use the View Transitions API (Chrome, Edge, Safari 18.2+; other browsers simply navigate).
 - **Later**: self-hosting on a Raspberry Pi; `dist/` and the headers carry over (see docs/deploy.md).
