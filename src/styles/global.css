@@ -5,7 +5,11 @@
    scrolls away with the page (a sticky two-row header took too much of a small screen). From 48rem: one row, sticky.
    The height never depends on the buttons, so nothing moves when JS un-hides them. scroll-padding-top keeps an anchor
    jump from hiding the section heading under the sticky nav. */
-:root { --nav-h: 5.5rem; }
+:root {
+  --nav-h: 6.25rem;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
 @media (min-width: 48rem) { :root { --nav-h: 3.5rem; } }
 
 * { box-sizing: border-box; }
@@ -17,6 +21,7 @@ html { scroll-padding-top: var(--space-3); }
 }
 
 body {
+  min-height: 100dvh; display: flex; flex-direction: column;
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
@@ -29,16 +34,17 @@ body {
 h1, h2, h3, h4, code, .prompt-line, .button, .tags, .stack, .label, nav, label, button, .item-meta, .badge-draft {
   font-family: var(--font-mono);
 }
-h1, h2, h3, h4 { font-weight: 600; line-height: 1.25; margin: 0; }
+h1, h2, h3, h4 { font-weight: 600; line-height: 1.25; margin: 0; text-wrap: balance; }
 p { margin: 0 0 var(--space-3); }
 code { font-size: 0.95em; }
 
 a { color: var(--color-link); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
-a:hover { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) { a:hover { text-decoration-thickness: 2px; } }
+a, button, input, textarea { touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 2px; }
 
 .skip-link { position: absolute; left: -999px; top: var(--space-2); z-index: 2; }
-.skip-link:focus { left: var(--space-2); background: var(--color-surface); padding: var(--space-2) var(--space-3); }
+.skip-link:focus { left: var(--space-2); background: var(--color-surface); padding: var(--space-2) var(--space-3); display: flex; align-items: center; min-height: 2.75rem; }
 
 /* ---------- Header / nav ---------- */
 .site-header {
@@ -56,10 +62,10 @@ a:hover { text-decoration-thickness: 2px; }
   justify-content: space-between; align-items: center;
 }
 .site-header a {
-  display: flex; align-items: center; min-height: 2.5rem;
+  display: flex; align-items: center; justify-content: center; min-height: 2.75rem; min-width: 2.75rem;
   font-size: var(--text-sm); color: var(--color-text); text-decoration: none;
 }
-.site-header a:hover { color: var(--color-link); text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .site-header a:hover { color: var(--color-link); text-decoration: underline; } }
 .site-header .brand { color: var(--color-accent); font-weight: 600; }
 .site-header li:first-child { display: none; } /* brand: the hero already shows the name on phones */
 .site-header li:has(.theme-toggle) { grid-area: 2 / 1 / 3 / 3; }
@@ -71,7 +77,8 @@ a:hover { text-decoration-thickness: 2px; }
 }
 
 /* ---------- Page frame ---------- */
-main, .site-footer { max-width: var(--page-width); margin: 0 auto; padding: 0 var(--space-3); }
+main, .site-footer { width: 100%; max-width: var(--page-width); margin: 0 auto; padding: 0 var(--space-3); }
+main { flex: 1 0 auto; }
 @media (min-width: 40rem) { main, .site-footer { padding: 0 var(--space-4); } }
 .site-footer {
   margin-top: var(--space-5); padding-bottom: var(--space-4);
@@ -81,7 +88,8 @@ main, .site-footer { max-width: var(--page-width); margin: 0 auto; padding: 0 va
 .prose { max-width: var(--measure); }
 
 .section { padding-top: var(--space-5); }
-.section-heading { scroll-margin-top: var(--space-3); font-size: var(--text-lg); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
+@media (min-width: 48rem) { .section { padding-top: var(--space-6); } }
+.section-heading { scroll-margin-top: var(--space-3); font-size: var(--text-lg2); margin-bottom: var(--space-3-5); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
 .prompt-path { color: var(--color-accent); }
 .prompt-sigil { color: var(--color-muted); }
 
@@ -92,23 +100,26 @@ main, .site-footer { max-width: var(--page-width); margin: 0 auto; padding: 0 va
 .headline { font-size: var(--text-lg); font-weight: 600; color: var(--color-accent); margin-bottom: var(--space-3); }
 .lede { font-size: var(--text-lg); max-width: 40ch; color: var(--color-text); }
 .availability { color: var(--color-muted); }
-.hero-links { list-style: none; padding: 0; margin: var(--space-4) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-family: var(--font-mono); }
-.hero-links a { display: inline-block; padding: var(--space-1) 0; }
+.status-dot { display: inline-block; width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--color-success); margin-right: var(--space-2); }
+.hero .prompt-line.ls-line { margin-bottom: var(--space-1); }
+.tracks-out { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-muted); display: flex; gap: 2ch; margin: 0 0 var(--space-3); }
+.hero-links { list-style: none; padding: 0; margin: var(--space-4) 0 0; }
 @media (min-width: 40rem) {
-  .hero { padding-top: 6rem; }
+  .hero { padding-top: var(--space-6); }
   .hero h1 { font-size: var(--text-2xl); }
 }
 .hero .prompt-line ~ .prompt-line { margin-top: var(--space-4); }
 .headline, .lede { text-wrap: balance; } /* no lone last word */
 
 /* The last prompt line opens the terminal: its hint button covers the whole line (::after). */
-.prompt-end { position: relative; }
+.prompt-end { position: relative; padding-block: var(--space-2-5); }
+.hero .prompt-line.prompt-end { margin-top: var(--space-3-5); }
 .prompt-hint {
   margin-left: var(--space-2); padding: 0; background: none; border: 0; cursor: pointer;
   font: inherit; color: var(--color-muted);
 }
 .prompt-hint::after { content: ''; position: absolute; inset: 0; }
-.prompt-end:hover .prompt-hint { color: var(--color-link); text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .prompt-end:hover .prompt-hint { color: var(--color-link); text-decoration: underline; } }
 
 /* The block cursor. While typing it stays solid; afterwards it blinks for 5 s and then stays solid (WCAG 2.2.2: no
    blinking that goes on longer than 5 s). */
@@ -132,11 +143,10 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
   border-radius: var(--radius);
   padding: var(--space-3);
 }
-.card-title { font-size: var(--text-base); margin-bottom: var(--space-2); }
+.card-title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
 .label { color: var(--color-muted); font-size: var(--text-sm); margin-right: var(--space-2); }
 
-/* Buttons (links styled as buttons): the primary one is outlined in the accent colour. No filled variant: there is
-   no "text on accent" token, and text may not use a background token. */
+/* Buttons (links styled as buttons): the primary one is the only accent fill on a page (text on it: --color-on-accent). */
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .hero .actions { margin-top: var(--space-4); }
 .button {
@@ -144,8 +154,11 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
   color: var(--color-text); text-decoration: none;
   border: 1px solid var(--color-border-strong); border-radius: var(--radius);
 }
-.button:hover { color: var(--color-link); border-color: var(--color-link); }
-.button-primary { color: var(--color-accent); border: 2px solid var(--color-accent); font-weight: 600; }
+.button-primary { background: var(--color-accent); color: var(--color-on-accent); border: 1px solid var(--color-accent); font-weight: 600; padding: 0 var(--space-4); }
+@media (hover: hover) and (pointer: fine) {
+  .button:hover { color: var(--color-link); border-color: var(--color-link); }
+  .button-primary:hover { background: var(--color-link); border-color: var(--color-link); color: var(--color-on-accent); }
+}
 
 /* ---------- About, skills ---------- */
 /* The photo: in About below 64rem, in the hero (right of the name) from 64rem; Photo.astro renders both and only one
@@ -158,7 +171,7 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
   .about:has(.about-photo) { grid-template-columns: minmax(0, var(--measure)) 10rem; align-items: start; }
   .about-photo { width: 10rem; }
 }
-/* Hero photo: blended into the page (tinted by the background, soft round edge, faded) and coming forward on hover.
+/* Hero photo: blended into the page (tinted by the background, soft round edge, faded).
    Positioned, not in the flow, so the hero text lays out exactly as without it. */
 @media (min-width: 64rem) {
   .about-photo { display: none; }
@@ -167,11 +180,9 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
   .hero-photo {
     display: block; position: absolute; right: 0; top: 7rem; width: 16rem;
     mask-image: radial-gradient(closest-side, var(--color-bg) 70%, transparent);
-    mix-blend-mode: luminosity; opacity: 0.7;
+    mix-blend-mode: luminosity; opacity: 0.55;
   }
-  .hero-photo:hover { mix-blend-mode: normal; opacity: 1; }
 }
-@media (prefers-reduced-motion: no-preference) { .hero-photo { transition: opacity 0.4s ease; } }
 .about .prose p:last-child { margin-bottom: 0; }
 .skill-lines { list-style: none; margin: 0; padding: 0; max-width: var(--measure); }
 /* Two columns (track | list) so a wrapped list stays aligned under itself. */
@@ -181,7 +192,7 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
 /* Path, drawn like `git log --graph`: the graph line is a CSS border, each entry's "*" sits on it (with the page
    background behind it, so the line breaks around the star), then the commit hash and the title. */
 .timeline { list-style: none; margin: 0 0 0 0.5ch; padding: 0; }
-.timeline > li { position: relative; border-left: 1px solid var(--color-border); padding: 0 0 var(--space-4) var(--space-3); }
+.timeline > li { position: relative; border-left: 1px solid var(--color-border-strong); padding: 0 0 var(--space-3-5) var(--space-3); }
 .timeline > li:last-child { padding-bottom: 0; border-left-color: transparent; }
 .timeline > li::before {
   content: '*'; position: absolute; left: -0.5ch; top: 0; width: 1ch; text-align: center;
@@ -189,23 +200,28 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
 }
 .item-title { font-size: var(--text-base); }
 .commit { color: var(--color-warning); font-weight: 400; margin-right: 1ch; }
-.head { color: var(--color-success); font-weight: 400; margin-right: 1ch; }
+.item-dates, .commit { font-variant-numeric: tabular-nums; }
 .item-meta { color: var(--color-muted); font-size: var(--text-sm); margin: var(--space-1) 0 var(--space-2); display: flex; flex-wrap: wrap; column-gap: var(--space-3); }
 .item-text { max-width: var(--measure); }
 .item-text:last-child { margin-bottom: 0; }
 
 /* ---------- Projects ---------- */
+@media (min-width: 48rem) { .hero ~ .section:has(> #projects) { padding-top: var(--space-5); } }
 .projects { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
 @media (min-width: 48rem) { .projects { grid-template-columns: repeat(2, 1fr); } }
 /* Cards: picture on top, then text. The title link covers the whole card (its ::after), so the card is one big
    click target while the markup has a single link. */
 .project { position: relative; padding: 0; overflow: hidden; }
-.project:hover, .project:focus-within { border-color: var(--color-accent); }
+.project:has(:focus-visible) { border-color: var(--color-accent); outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .project:hover { border-color: var(--color-accent); }
+  .project:hover .card-title a { text-decoration: underline; }
+}
 .card-title a::after { content: ''; position: absolute; inset: 0; }
-.card-body { padding: var(--space-3); }
-.card-image { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: top; border-bottom: 1px solid var(--color-border); }
+.card-body { padding: var(--space-3-5); }
+.card-image { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: top; }
 .card-title a { text-decoration: none; }
-.project:hover .card-title a, .card-title a:focus-visible { text-decoration: underline; }
+.card-title a:focus-visible { text-decoration: underline; }
 .card-image-fallback {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono); font-size: var(--text-xl); color: var(--color-muted); background: var(--color-bg);
@@ -216,28 +232,40 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
   font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-muted);
   border-bottom: 1px solid var(--color-border);
 }
-.card-bar .dot { width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--color-error); }
-.card-bar .dot:nth-child(2) { background: var(--color-warning); }
-.card-bar .dot:nth-child(3) { background: var(--color-success); margin-right: var(--space-1); }
-@media (prefers-reduced-motion: no-preference) {
-  img.card-image { transition: transform 0.3s ease; }
-  .project:hover img.card-image { transform: scale(1.03); }
-}
+.card-bar .dot { width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--color-border-strong); flex: none; }
+.card-bar .dot:nth-child(3) { margin-right: var(--space-1); }
+.card-path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Card picture rests slightly dimmed (tames a white screenshot in dark) and comes to full on hover / keyboard focus. */
+img.card-image { opacity: 0.85; }
+.project:has(:focus-visible) img.card-image { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .project:hover img.card-image { opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) { img.card-image { transition: opacity 150ms var(--ease-out); } }
 .tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
-.tag { font-size: var(--text-sm); color: var(--color-accent); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 var(--space-2); }
+.tag { font-size: var(--text-sm); color: var(--color-accent); }
+.tag::before { content: '#'; content: '#' / ''; }
 .stack { color: var(--color-muted); font-size: var(--text-sm); }
 .badge-draft { color: var(--color-warning); font-size: var(--text-sm); }
 .empty a { overflow-wrap: anywhere; }
 
 .project-title { font-size: var(--text-xl); margin: var(--space-2) 0 var(--space-3); }
-.project-image { display: block; width: 100%; height: auto; margin: var(--space-4) 0; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.project-image { display: block; width: 100%; height: auto; margin: var(--space-4) 0; border: 1px solid var(--color-border-strong); border-radius: var(--radius); background: var(--color-surface); padding: var(--space-2); }
 .project-image-fallback {
   margin: var(--space-4) 0; padding: var(--space-5) var(--space-3); text-align: center;
   font-family: var(--font-mono); color: var(--color-muted);
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius);
 }
-.label-heading { font-size: var(--text-base); color: var(--color-accent); margin: var(--space-4) 0 var(--space-2); }
+.label-heading { font-size: var(--text-base); color: var(--color-accent); margin: var(--space-4-5) 0 var(--space-2); }
+.project-page .prompt-line a { display: inline-flex; align-items: center; gap: 1ch; min-height: 2.75rem; }
+/* Facts: label column | text on wide screens, stacked on narrow ones. */
+.facts { display: grid; gap: var(--space-3-5); }
+.fact .label-heading { margin: 0; }
+.fact p { margin: 0; max-width: var(--measure); }
+@media (min-width: 40rem) { .fact { display: grid; grid-template-columns: 9ch 1fr; column-gap: var(--space-3); } }
 .media { margin: 0 0 var(--space-4); }
+/* Screenshots side by side when they fit; wide (landscape) ones take a full row. */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-3-5); align-items: start; }
+.gallery .media { margin: 0; }
+.media-wide { grid-column: 1 / -1; }
 .media img, .media video { display: block; width: 100%; height: auto; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
 /* Pictures are never stretched past their own size, and tall (portrait) ones fit the screen. */
 .media img { width: auto; max-width: 100%; max-height: 80vh; }
@@ -264,16 +292,39 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
 
 /* Terminal button in the nav: looks like the other nav links (the theme switch styles itself in ThemeToggle.astro). */
 .site-header .term-open {
-  display: flex; align-items: center; min-height: 2.5rem; padding: 0;
+  display: flex; align-items: center; min-height: 2.75rem; padding: 0;
   font: inherit; font-size: var(--text-sm); color: var(--color-text);
   background: none; border: 0; cursor: pointer;
 }
-.site-header .term-open:hover { color: var(--color-link); text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .site-header .term-open:hover { color: var(--color-link); text-decoration: underline; } }
+
+.term button { min-width: 2.75rem; }
 
 /* ---------- Page transition (src/scripts/transition.ts) ---------- */
 @media (prefers-reduced-motion: no-preference) {
   @view-transition { navigation: auto; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.25s; }
+  /* Root: the old page fades out in 70 ms, the new one fades in over 150 ms from 50 ms, so no frame shows two readable
+     text layers (200 ms in total). The backdrop keeps the gap in the page colour. */
+  ::view-transition { background: var(--color-bg); }
+  ::view-transition-old(root) { animation: vt-out 70ms var(--ease-out) both; }
+  ::view-transition-new(root) { animation: vt-in 150ms var(--ease-out) 50ms both; }
+  @keyframes vt-out { to { opacity: 0; } }
+  @keyframes vt-in { from { opacity: 0; } }
+  /* public/morph-init.js sets data-morph on the one image of the pair, for the transition only. It is captured at full
+     opacity: the 0.85 card dim would otherwise stay in the snapshot and let page text show through. */
+  [data-morph] { view-transition-name: card-image; }
+  img.card-image[data-morph] { opacity: 1; transition: none; }
+  /* Card image <-> project page image (named by transition.ts for the transition only). Both snapshots fill the group
+     and are cropped like the card (cover, top-aligned), so the 16:9 card and the natural-ratio page image blend. */
+  ::view-transition-group(card-image) { animation-duration: 240ms; animation-timing-function: var(--ease-in-out); overflow: clip; }
+  ::view-transition-image-pair(card-image) { isolation: auto; }
+  ::view-transition-old(card-image), ::view-transition-new(card-image) { width: 100%; height: 100%; object-fit: cover; object-position: top; mix-blend-mode: normal; }
+  /* Opaque for the whole morph: the old picture stays at full opacity underneath and the new one fades in over it. */
+  ::view-transition-old(card-image):not(:only-child) { animation: none; opacity: 1; }
+  ::view-transition-new(card-image):not(:only-child) { animation: vt-in 240ms var(--ease-in-out) both; }
+  /* Only one side has the image (its partner is off-screen): fade it with the page instead of holding it for the whole morph. */
+  ::view-transition-old(card-image):only-child { animation: vt-out 70ms var(--ease-out) both; }
+  ::view-transition-new(card-image):only-child { animation: vt-in 150ms var(--ease-out) 50ms both; }
 }
 .boot {
   position: fixed; inset: 0; z-index: 3; margin: 0;
@@ -284,3 +335,52 @@ html[data-intro] .hero .cmd:not(.shown) { visibility: hidden; animation: intro-f
 .boot::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-bg); opacity: 0.93; }
 .boot p { margin: 0 0 var(--space-1); white-space: pre; }
 .boot-ok { color: var(--color-success); }
+
+/* I1 evidence + I4 diagram */
+.evidence { margin: var(--space-4) 0 0; }
+.evidence .prompt-line { margin-bottom: var(--space-1); }
+.evidence-text { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-text); margin: 0 0 var(--space-2); }
+.evidence-text > span { white-space: nowrap; }
+.evidence-text > span + span::before { content: '·'; margin: 0 var(--space-2); }
+@media (max-width: 39.99rem) {
+  .evidence-text > span { display: block; }
+  .evidence-text > span + span::before { content: none; }
+}
+.diagram { margin: 0 0 var(--space-4); }
+@media (max-width: 39.99rem) { .diagram { margin-bottom: var(--space-3); } }
+.diagram figcaption { margin-top: var(--space-2); color: var(--color-muted); font-size: var(--text-sm); max-width: var(--measure); }
+@media (min-width: 48rem) {
+  .diagram { display: grid; grid-template-columns: 22.5rem minmax(0, 1fr); gap: var(--space-4); align-items: center; }
+  .diagram figcaption { margin-top: 0; }
+}
+.diagram-svg { display: block; width: 100%; max-width: 22.5rem; height: auto; }
+.diagram-box, .diagram-arrow { fill: none; stroke: var(--color-border-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.diagram-name { fill: var(--color-text); font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.diagram-detail { fill: var(--color-muted); font-family: var(--font-mono); font-size: 12.5px; }
+
+/* I3 status line + colophon */
+.site-footer .status-line {
+  display: flex; flex-wrap: wrap; gap: 0 var(--space-3); align-items: center;
+  margin: var(--space-2) 0 0; padding: var(--space-1) var(--space-3);
+  font-family: var(--font-mono); color: var(--color-muted);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius);
+}
+/* Segments never break inside; the dots are drawn by the separator rule below, so a dot is never at a line end:
+   wide = one row with dots, phones = one segment per line without dots. */
+.status-line > * { white-space: nowrap; }
+@media (min-width: 48rem) {
+  .site-footer .status-line { column-gap: 0; }
+  .status-line > * + *::before { content: '·'; margin: 0 var(--space-2); color: var(--color-muted); }
+}
+@media (max-width: 47.99rem) {
+  .site-footer .status-line { flex-direction: column; align-items: flex-start; }
+}
+.status-line .st-branch { color: var(--color-success); font-weight: 600; }
+.status-line .st-hash { color: var(--color-warning); }
+.status-line a { color: var(--color-link); }
+.code-block {
+  margin: 0 0 var(--space-3); padding: var(--space-3); max-width: var(--measure);
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-text);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}

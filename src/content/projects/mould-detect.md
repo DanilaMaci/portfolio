@@ -5,7 +5,7 @@ problem: Mould grows where air touches a cold surface and stays above about 80 %
 role: Solo project, from the breadboard to the 3D dashboard. I'd rather see mould coming than scrub it off the wall afterwards, and a sensor network felt like the proper engineering answer to one cold wall.
 tracks: [embedded, data, software]
 stack: [C, ESP-IDF, ESP32, Supabase, PostgreSQL, Python, JavaScript, three.js, GitHub Actions, Cloudflare Workers]
-result: Logging every minute since 6 Oct 2026. The sensor drivers are tested on the host without hardware, a pipeline monitor checks the data every minute, and the self-hosted API handled about 2000 requests/s in a local load test.
+result: Logging every minute since 6 Oct 2026. The sensor drivers are tested on the host without hardware; a pipeline monitor (checks every minute) and a self-hosted API (about 2000 requests/s in a local load test) are built and tested, not yet run on the real data.
 repo: https://github.com/DanilaMaci/mould-detect
 live: https://mould.danilamacijauskas.dev
 image: ../../assets/projects/mould-detect-dashboard.jpg
@@ -17,6 +17,8 @@ gallery:
   - image: ../../assets/projects/mould-detect-breadboard.jpg
     alt: ESP32 room node on a breadboard with the BME280 and SCD-40 sensors, buttons and LEDs.
     caption: The room node on its breadboard.
+evidence: { command: uptime room-node, since: 2026-10-06, checked: 2026-11-13 }
+diagram: mould-detect
 order: 0
 draft: false
 ---

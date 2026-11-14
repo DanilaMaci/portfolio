@@ -5,7 +5,7 @@ export const EMAIL = 'contact@danilamacijauskas.dev';
 export const MAX_LINES = 200;
 const MAX_HISTORY = 100;
 const LINK_HOSTS = ['github.com', 'linkedin.com', 'www.linkedin.com'];
-const COMMANDS = ['help', 'ls', 'open', 'cd', 'cat', 'about', 'projects', 'contact', 'clear', 'exit'];
+const COMMANDS = ['help', 'ls', 'open', 'cd', 'cat', 'about', 'projects', 'contact', 'theme', 'cv', 'clear', 'exit'];
 
 const t = (text) => ({ text });
 
@@ -41,13 +41,36 @@ export function stepHistory(history, idx, dir) {
 
 const names = (ctx) => [...ctx.sections.map((s) => s.id), ...ctx.projects.map((p) => p.slug)];
 
+// Exact id/slug/title wins; else a unique prefix of a section id or project slug. { url } | { many: [names] } | null
 function resolve(arg, ctx) {
+  if (arg === '~') return { url: '/', name: 'home' };
+  const exact = resolveExact(arg, ctx);
+  if (exact) return exact;
+  const hits = names(ctx).filter((n) => n.startsWith(arg));
+  if (hits.length > 1) return { many: hits };
+  return hits.length ? resolveExact(hits[0], ctx) : null;
+}
+
+function resolveExact(arg, ctx) {
   const section = ctx.sections.find((s) => s.id === arg || s.title.toLowerCase() === arg);
-  if (section) return `/#${section.id}`;
+  if (section && /^[a-z0-9-]+$/.test(section.id)) return { url: `/#${section.id}`, name: section.id };
   const project = ctx.projects.find((p) => p.slug === arg || p.title.toLowerCase() === arg);
-  if (project && /^[a-z0-9-]+$/.test(project.slug)) return `/projects/${project.slug}/`;
+  if (project && /^[a-z0-9-]+$/.test(project.slug)) return { url: `/projects/${project.slug}/`, name: project.slug };
   return null;
 }
+
+// Edit distance (Levenshtein), for "Did you mean".
+function distance(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = row;
+  }
+  return prev[b.length];
+}
+
+const suggest = (word) => COMMANDS.filter((c) => distance(word, c) <= (c.length <= 3 ? 1 : 2));
 
 const projectLines = (ctx) =>
   ctx.projects.length
@@ -88,13 +111,15 @@ const HELP = [
   t('  cat about        read the short bio (or just: about)'),
   t('  projects         list projects'),
   t('  contact          how to reach me'),
+  t('  theme light|dark switch the colour theme'),
+  t('  cv               print the home page as a one-page CV (alias: print)'),
   t('  clear            empty this screen'),
   t('  exit             back to the normal page'),
   t('Tip: Up/Down repeat earlier commands, Tab completes, Ctrl+` opens or closes this window.'),
   t('Some Linux commands are hidden here. Try one.'),
 ];
 
-// run(input, ctx) -> { lines, navigate?, clear?, close? }
+// run(input, ctx) -> { lines, navigate?, clear?, close?, theme?, print? }; ctx.path / ctx.currentTheme are set by the DOM layer
 export function run(input, ctx) {
   const words = input.trim().split(/\s+/).filter(Boolean);
   if (!words.length) return { lines: [] };
@@ -113,10 +138,19 @@ export function run(input, ctx) {
     case 'open':
     case 'cd': {
       if (!arg) return { lines: [t(`usage: ${cmd} <section|project>. Type ls to see the names.`)] };
-      const navigate = resolve(arg, ctx);
-      if (!navigate) return { lines: [t(`${cmd}: no such section or project: ${arg}. Type ls.`)] };
-      return { lines: [t(`Opening ${arg}...`)], navigate };
+      const found = resolve(arg, ctx);
+      if (!found) return { lines: [t(`${cmd}: no such section or project: ${arg}. Type ls.`)] };
+      if (found.many) return { lines: [t(`${cmd}: ${arg} is ambiguous. Did you mean: ${found.many.join(', ')}?`)] };
+      return { lines: [t(`Opening ${found.name}...`)], navigate: found.url };
     }
+    case 'theme':
+      if (arg === 'light' || arg === 'dark') return { lines: [t(`Theme: ${arg}.`)], theme: arg };
+      if (!arg) return { lines: [t(`Theme: ${ctx.currentTheme ?? 'unknown'}. Usage: theme light|dark`)] };
+      return { lines: [t('usage: theme light|dark')] };
+    case 'cv':
+    case 'print':
+      if (ctx.path !== '/') return { lines: [t('cv: go to the home page first (cd ~), then run cv.')] };
+      return { lines: [t('Opening the print dialog. Choose "Save as PDF" for a one-page CV.')], print: true };
     case 'cat':
       if (!arg) return { lines: [t('usage: cat about')] };
       return arg === 'about' ? { lines: about(ctx) } : { lines: [t(`cat: ${arg}: no such file. Try: cat about`)] };
@@ -147,8 +181,10 @@ export function run(input, ctx) {
       return { lines: [t(`${cmd}: no editors here, so nobody gets stuck. Type exit to leave.`)] };
     case 'git':
       return { lines: [t('The Path section is my git log. Type: open path')] };
-    default:
-      return { lines: [t(`command not found: ${words[0]}. Type help.`)] };
+    default: {
+      const near = suggest(cmd);
+      return { lines: [t(`command not found: ${words[0]}. ` + (near.length ? `Did you mean: ${near.join(', ')}?` : 'Type help.'))] };
+    }
   }
 }
 
@@ -158,6 +194,6 @@ export function complete(line, ctx) {
   if (!m) return [];
   const [, cmd, rest, arg] = m;
   if (rest === undefined) return COMMANDS.filter((c) => c.startsWith(cmd));
-  const pool = cmd === 'open' || cmd === 'cd' ? names(ctx) : cmd === 'cat' ? ['about'] : [];
+  const pool = cmd === 'open' || cmd === 'cd' ? names(ctx) : cmd === 'cat' ? ['about'] : cmd === 'theme' ? ['light', 'dark'] : [];
   return pool.filter((n) => n.startsWith(arg)).map((n) => `${cmd} ${n}`);
 }

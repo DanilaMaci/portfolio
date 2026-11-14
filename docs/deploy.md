@@ -65,6 +65,8 @@ Pull requests from forks get no secrets, so their CI fails by design (no outside
 Needs CSP edits in `public/_headers` (Turnstile: `script-src` and `frame-src https://challenges.cloudflare.com`;
 `connect-src`/`form-action` for the Function) and matching updates to tests/headers.test.mjs.
 
+Note: the one-page print test (`tests/ideas.test.mjs`) needs Chrome and is skipped where Chrome is absent (e.g. the Cloudflare build).
+
 ## 5. Raspberry Pi later
 Same `dist/`. nginx equivalent of `public/_headers` (server block): `add_header` for each header line under `/*`,
 `location /_astro/ { add_header Cache-Control "public, max-age=31536000, immutable"; }`, `error_page 404 /404.html;`,

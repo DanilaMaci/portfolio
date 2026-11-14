@@ -1,7 +1,7 @@
 // Single source for facts used by both the page and the terminal (nav, section headings, about text, profile links).
 export const sections = [
-  { id: 'about', title: 'About' },
   { id: 'projects', title: 'Projects' },
+  { id: 'about', title: 'About' },
   { id: 'path', title: 'Path' },
   { id: 'skills', title: 'Skills' },
   { id: 'contact', title: 'Contact' },

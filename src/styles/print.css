@@ -1,0 +1,38 @@
+/* One-page CV: Ctrl+P (or the `cv` terminal command) on the home page. Colours come from the print tokens in
+   tokens.css (the light theme). Borders, not backgrounds. */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html { font-size: 9.5pt; }
+  body { background: none; line-height: 1.4; }
+  .site-header, .site-footer, .skip-link, .term, dialog, .boot, .prompt-line, .ls-line, .tracks-out, .status-dot, .hero .actions, .contact .button,
+  .photo, .card-bar, .card-image, .card-image-fallback, .hero-links, .stack, .tags { display: none !important; }
+  main { padding: 0; max-width: none; display: flex; flex-direction: column; }
+  /* order: name, headline, availability, contact, path, skills, projects (About stays off: it repeats the lede) */
+  .hero { order: 1; padding-top: 0; }
+  section[aria-labelledby="contact"] { order: 2; }
+  section[aria-labelledby="path"] { order: 3; }
+  section[aria-labelledby="skills"] { order: 4; }
+  section[aria-labelledby="projects"] { order: 5; }
+  section[aria-labelledby="about"] { display: none; }
+  .section { padding-top: var(--space-3); }
+  .section-heading { margin-bottom: var(--space-2); font-size: var(--text-base); }
+  .hero h1 { font-size: var(--text-xl); margin-bottom: var(--space-1); }
+  .headline { font-size: var(--text-base); margin-bottom: var(--space-1); }
+  .lede { font-size: var(--text-base); max-width: none; margin-bottom: var(--space-1); }
+  .availability { margin-bottom: 0; }
+  .contact { display: block; }
+  .contact-form { display: none; }
+  .contact-mail p:first-child { display: none; }
+  .contact-mail p { margin-bottom: var(--space-1); }
+  .timeline > li { padding-bottom: var(--space-2); break-inside: avoid; }
+  .item-meta { margin: 0 0 var(--space-1); }
+  .skill-lines li { padding: 0; }
+  .projects { display: block; }
+  .card { border: 0; border-left: 2px solid var(--color-border-strong); border-radius: 0; background: none; break-inside: avoid; margin-bottom: var(--space-2); }
+  .card-body { padding: 0 0 0 var(--space-2); }
+  .card-title a::after { content: ' — danilamacijauskas.dev' attr(href); position: static; font-weight: 400; font-size: var(--text-sm); color: var(--color-muted); }
+  .projects > :nth-child(n+4) { display: none !important; }
+  .card p { margin-bottom: var(--space-1); }
+  a[href^="http"]::after { content: ' (' attr(href) ')'; color: var(--color-muted); font-size: 0.9em; }
+  a { color: var(--color-text); text-decoration: none; }
+}

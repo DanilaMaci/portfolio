@@ -17,6 +17,8 @@ reports/
 CLAUDE.md
 STATE.md
 docs/briefs/
+docs/design/
+docs/prompts/
 docs/reviews/
 docs/handoff.md
 docs/handoff/

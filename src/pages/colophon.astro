@@ -1,0 +1,41 @@
+---
+// /colophon: how the site is checked. The check names come from package.json and the CSP from public/_headers at
+// build time (src/lib/build.mjs); the reasons are shortened from README "Why these checks exist".
+import Base from '../layouts/Base.astro';
+import { buildFacts } from '../lib/build.mjs';
+
+const { names, csp } = buildFacts;
+const reasons: Record<string, string> = {
+  pins: 'every dependency version is exact, so an install next year gives the same site as today.',
+  tokens: 'colours and font names live only in src/styles/tokens.css, so restyling is one file; text never uses a background colour.',
+  contrast: 'text stays readable (WCAG AA: 4.5:1, form borders 3:1) on both backgrounds, in both themes.',
+  privacy: 'no phone number, address, personal email or entry from a private deny-list reaches the repo or the built site. A heuristic, not a guarantee.',
+  history: 'the same rules over every past commit, plus every commit author and committer email must be a GitHub no-reply address.',
+  links: 'every local link, image, srcset entry and CSS url() in dist/ exists with the exact letter case.',
+  inline: 'no inline scripts or styles in the built HTML, so the strict Content-Security-Policy can forbid them.',
+};
+const reason = (n: string) => {
+  if (!reasons[n]) throw new Error(`/colophon: check "${n}" has no reason; add one to the list above`);
+  return reasons[n];
+};
+---
+
+<Base title="How this site is built and checked" description="The checks every build of this site must pass, and the security policy it is served with.">
+  <article class="section project-page">
+    <p class="prompt-line"><a href="/"><span aria-hidden="true">$ </span>cd ..</a></p>
+    <h1 class="project-title">How this site is built and checked</h1>
+    <p class="prompt-line"><span aria-hidden="true">$ </span>npm test</p>
+    <div class="prose">
+      <p>Cloudflare builds this site with npm test and deploys only if it passes.</p>
+      <h2 class="label-heading">The checks</h2>
+    </div>
+    <ul class="skill-lines">
+      {names.map((n) => <li><span class="label" translate="no">{n}</span> <span>{reason(n)}</span></li>)}
+    </ul>
+    <div class="prose">
+      <h2 class="label-heading">Content-Security-Policy</h2>
+      <p>Sent with every page, read from public/_headers:</p>
+    </div>
+    <pre class="code-block" translate="no">{csp}</pre>
+  </article>
+</Base>

@@ -3,6 +3,8 @@ import type { GetStaticPaths } from 'astro';
 import { Image, getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Evidence from '../../components/Evidence.astro';
+import { diagramComponent } from '../../lib/evidence.mjs';
 import { getVisibleProjects } from '../../lib/projects';
 
 // One page per visible project: live ones in the build, plus drafts in `npm run dev`.
@@ -19,9 +21,20 @@ const wide = '(min-width: 62rem) 60rem, 100vw';
 // Gallery pictures: `sizes` also sets the displayed width, so cap it at the file's own width (no upscaling).
 // The width comes from getImage (same widths as <Image>, so no extra files): reading g.image.width directly would
 // make Astro copy the original file into the build as well.
-const galleryWidths = await Promise.all(
-  (d.gallery ?? []).map(async (g) => (await getImage({ src: g.image, widths: [400, 800, 1200] })).attributes.width),
+const galleryDims = await Promise.all(
+  (d.gallery ?? []).map(async (g) => {
+    const { width, height } = (await getImage({ src: g.image, widths: [400, 800, 1200] })).attributes;
+    return { width, height };
+  }),
 );
+const heroLinks = [
+  ...(d.live ? [{ url: d.live, label: 'Try it live' }] : []),
+  ...(d.repo ? [{ url: d.repo, label: 'Source code' }] : []),
+  ...(d.links ?? []),
+];
+// `diagram: mould-detect` in the frontmatter -> src/components/diagrams/MouldDetect.astro
+const diagrams = import.meta.glob('../../components/diagrams/*.astro', { eager: true }) as Record<string, { default: any }>;
+const Diagram = diagramComponent(d.diagram, diagrams);
 const upTo = (w: number) => `(min-width: 62rem) min(60rem, ${w}px), min(100vw, ${w}px)`;
 ---
 
@@ -36,34 +49,53 @@ const upTo = (w: number) => `(min-width: 62rem) min(60rem, ${w}px), min(100vw, $
       {d.tracks.map((t) => <span class="tag">{t}</span>)}
     </p>
     <p class="lede prose">{d.summary}</p>
-    <ul class="hero-links">
-      {d.live && <li><a href={d.live}>Try it live</a></li>}
-      {d.repo && <li><a href={d.repo}>Source code</a></li>}
-      {d.links?.map((l) => <li><a href={l.url}>{l.label}</a></li>)}
-    </ul>
+    {
+      heroLinks.length > 0 && (
+        <ul class="actions hero-links">
+          {heroLinks.map((l, i) => (
+            <li>
+              <a class={i === 0 ? 'button button-primary' : 'button'} href={l.url}>{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {d.evidence && <Evidence evidence={d.evidence} />}
 
     {
       d.image && d.imageAlt ? (
-        <Image class="project-image" src={d.image} alt={d.imageAlt} widths={[400, 800, 1200]} sizes={wide} />
+        <Image class="project-image" src={d.image} alt={d.imageAlt} widths={[400, 800, 1200]} sizes={wide} loading="eager" fetchpriority="high" />
       ) : (
         <div class="project-image-fallback" aria-hidden="true">~/projects/{project.id}</div>
       )
     }
 
-    <div class="prose">
-      <h2 class="label-heading">Problem</h2>
-      <p>{d.problem}</p>
-      <h2 class="label-heading">My role</h2>
-      <p>{d.role}</p>
+    <div class="facts">
+      <section class="fact">
+        <h2 class="label-heading">Problem</h2>
+        <p>{d.problem}</p>
+      </section>
+      <section class="fact">
+        <h2 class="label-heading">My role</h2>
+        <p>{d.role}</p>
+      </section>
       {
         d.result && (
-          <>
+          <section class="fact">
             <h2 class="label-heading">Result</h2>
             <p>{d.result}</p>
-          </>
+          </section>
         )
       }
     </div>
+    {
+      Diagram && (
+        <>
+          <h2 class="label-heading">Architecture</h2>
+          <Diagram />
+        </>
+      )
+    }
     {
       d.video && (
         <>
@@ -79,17 +111,19 @@ const upTo = (w: number) => `(min-width: 62rem) min(60rem, ${w}px), min(100vw, $
       )
     }
     {
-      d.gallery && (
+      d.gallery?.length ? (
         <>
           <h2 class="label-heading">Screenshots</h2>
-          {d.gallery.map((g, i) => (
-            <figure class="media">
-              <Image src={g.image} alt={g.alt} widths={[400, 800, 1200]} sizes={upTo(galleryWidths[i])} />
-              {g.caption && <figcaption>{g.caption}</figcaption>}
-            </figure>
-          ))}
+          <div class="gallery">
+            {d.gallery.map((g, i) => (
+              <figure class={galleryDims[i].width >= galleryDims[i].height ? 'media media-wide' : 'media'}>
+                <Image src={g.image} alt={g.alt} widths={[400, 800, 1200]} sizes={upTo(galleryDims[i].width)} />
+                {g.caption && <figcaption>{g.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
         </>
-      )
+      ) : null
     }
     <div class="prose">
       {

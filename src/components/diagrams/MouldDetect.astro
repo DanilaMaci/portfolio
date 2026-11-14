@@ -1,0 +1,37 @@
+---
+// Data path of the mould-detect project. Labels come from the project's own text; the arrows follow its README
+// (room node -> Supabase -> dashboard).
+const steps = [
+  ['BME280 + SCD-40', 'sensors'],
+  ['ESP32 room node', 'C, ESP-IDF'],
+  ['Supabase', 'PostgreSQL'],
+  ['3D dashboard', 'three.js'],
+];
+const BH = 44;
+const GAP = 28;
+const height = 16 + steps.length * BH + (steps.length - 1) * GAP;
+---
+
+<figure class="diagram">
+  <svg class="diagram-svg" viewBox={`0 0 360 ${height}`} role="img" aria-labelledby="diagram-title diagram-desc">
+    <title id="diagram-title">Data path of the mould risk monitor</title>
+    <desc id="diagram-desc">Sensors (BME280, SCD-40) feed the ESP32 room node, which sends readings to Supabase (PostgreSQL), which the 3D dashboard reads.</desc>
+    {
+      steps.map(([name, detail], i) => {
+        const y = 8 + i * (BH + GAP);
+        const y2 = y + BH + GAP;
+        return (
+          <>
+            <rect class="diagram-box" x="20" y={y} width="320" height={BH} rx="4" />
+            <text class="diagram-name" x="180" y={y + 19} text-anchor="middle">{name}</text>
+            <text class="diagram-detail" x="180" y={y + 35} text-anchor="middle">{detail}</text>
+            {i < steps.length - 1 && <path class="diagram-arrow" d={`M180 ${y + BH}V${y2}M175 ${y2 - 6}L180 ${y2}L185 ${y2 - 6}`} />}
+          </>
+        );
+      })
+    }
+  </svg>
+  <figcaption>
+    Data path: sensors, ESP32 room node, Supabase (PostgreSQL), 3D dashboard (three.js).
+  </figcaption>
+</figure>

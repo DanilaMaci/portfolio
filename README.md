@@ -11,7 +11,9 @@ private data and a strict security policy before it can be deployed.
 - **Design tokens**: every colour and font lives in `src/styles/tokens.css` (dark and light themes); layout is in
   `src/styles/global.css`.
 - **Small scripts** (`src/scripts/`): the dark/light switch, the hero's typing intro, the optional terminal (pure
-  command logic in `terminal/commands.mjs`, DOM code in `terminal/terminal.ts`) and the page-transition boot log.
+  command logic in `terminal/commands.mjs`, DOM code in `terminal/terminal.ts`) and the page-transition boot log (once per tab). `public/morph-init.js` runs
+  before first paint and names the card image so it morphs into the project page; `src/styles/print.css` prints the
+  home page as a one-page CV; `/colophon/` lists the checks and the security policy.
 - **Checks** (`scripts/check-*.mjs`, `tests/`, `scripts/smoke-browser.mjs`) and the **security headers**
   (`public/_headers`) keep the published site honest; see below.
 
@@ -88,7 +90,7 @@ commit with private data or a non-private author email; enable them once per clo
 ## Status
 
 - **Works**: live at https://danilamacijauskas.dev; home page, project pages, 404, dark/light themes, typing intro,
-  optional terminal, page transitions; `npm test` (about 100 unit tests plus checks) and the browser smoke test pass;
+  optional terminal, page transitions, print as a one-page CV, `/colophon/`; `npm test` (about 140 unit tests plus checks) and the browser smoke test pass;
   Lighthouse 100 in all four categories on mobile and desktop (local build, 2026-10-28).
 - **Published projects**: mould risk monitor, Irish investing planner; the others stay drafts until they are live or
   public.

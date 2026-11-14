@@ -63,10 +63,19 @@ if (openers.length && dialog) {
     }
     history = pushHistory(history, text.trim());
     idx = history.length;
+    const root = document.documentElement;
+    ctx.path = location.pathname;
+    ctx.currentTheme = root.dataset.theme ?? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     const r = run(text, ctx);
     if (r.clear) log.replaceChildren();
     r.lines.forEach(printLine);
     if (r.close) dialog.close();
+    // Reuse the nav switch (it also stores the choice and updates theme-color); click only if the theme differs.
+    if (r.theme && r.theme !== ctx.currentTheme) document.querySelector<HTMLButtonElement>('[data-theme-toggle]')?.click();
+    if (r.print) {
+      dialog.close(); // the open dialog would otherwise print on top of the page
+      window.print();
+    }
     if (r.navigate) go(r.navigate);
   };
 

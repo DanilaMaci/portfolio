@@ -57,3 +57,17 @@ test('built page (when dist exists): same head order', { skip: !existsSync('dist
   const sheet = h.search(/<link[^>]*rel="stylesheet"|<style/);
   assert.ok(sheet === -1 || sheet > script, 'stylesheet after the script');
 });
+
+test('theme-color literals in Base.astro and theme-init.js equal --color-bg of tokens.css, dark and light', () => {
+  const bgs = [...css.matchAll(/--color-bg:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1].toLowerCase());
+  const [dark, light] = [bgs[0], bgs[1]];
+  assert.equal(bgs.length, 4); // dark, two light blocks, print (= light)
+  assert.equal(new Set(bgs.slice(1)).size, 1, 'the light and print blocks agree');
+  const meta = (scheme) => new RegExp(`name="theme-color"[^>]*prefers-color-scheme: ${scheme}\\)"[^>]*content="(#[0-9a-fA-F]{6})"`).exec(base)?.[1].toLowerCase();
+  assert.equal(meta('dark'), dark, 'Base.astro dark');
+  assert.equal(meta('light'), light, 'Base.astro light');
+  const js = /t === 'dark' \? '(#[0-9a-fA-F]{6})' : '(#[0-9a-fA-F]{6})'/.exec(init);
+  assert.ok(js, 'theme-init.js theme-color literals not found');
+  assert.equal(js[1].toLowerCase(), dark, 'theme-init.js dark');
+  assert.equal(js[2].toLowerCase(), light, 'theme-init.js light');
+});

@@ -40,7 +40,9 @@ const commit = (e: { title: string; org: string; dates: string }) => {
       I break problems down and build from the bottom up: from the sensor driver on a microcontroller to the
       dashboard that shows its readings.
     </p>
-    <p class="availability">Available from January 2027.</p>
+    <p class="prompt-line ls-line" aria-hidden="true"><span class="prompt-path">~</span> <span class="prompt-sigil">$</span> ls tracks</p>
+    <p class="tracks-out"><span>software</span><span>embedded</span><span>data</span></p>
+    <p class="availability"><span class="status-dot" aria-hidden="true"></span>Available from January 2027.</p>
     <p class="actions">
       {
         projects.length > 0 ? (
@@ -65,17 +67,6 @@ const commit = (e: { title: string; org: string; dates: string }) => {
     import '../scripts/intro/intro.ts';
   </script>
 
-  <section class="section" aria-labelledby="about">
-    <h2 class="section-heading" id="about">{title.about}</h2>
-    <div class="about">
-      <div class="prose">
-        <p>{about} {story.join(' ')}</p>
-        <p>{personal}</p>
-      </div>
-      <Photo class="photo about-photo" />
-    </div>
-  </section>
-
   <section class="section" aria-labelledby="projects">
     <h2 class="section-heading" id="projects">{title.projects}</h2>
     {
@@ -91,7 +82,7 @@ const commit = (e: { title: string; org: string; dates: string }) => {
                 <span class="dot" />
                 <span class="dot" />
                 <span class="dot" />
-                ~/projects/{p.id}
+                <span class="card-path">~/projects/{p.id}</span>
               </p>
               {p.data.image ? (
                 <Image class="card-image" src={p.data.image} alt="" widths={[480, 960]} sizes="(min-width: 48rem) 29rem, 100vw" />
@@ -118,6 +109,17 @@ const commit = (e: { title: string; org: string; dates: string }) => {
     }
   </section>
 
+  <section class="section" aria-labelledby="about">
+    <h2 class="section-heading" id="about">{title.about}</h2>
+    <div class="about">
+      <div class="prose">
+        <p>{about} {story.join(' ')}</p>
+        <p>{personal}</p>
+      </div>
+      <Photo class="photo about-photo" />
+    </div>
+  </section>
+
   <section class="section" aria-labelledby="path">
     <h2 class="section-heading" id="path">{title.path}</h2>
     <ol class="timeline">
@@ -125,8 +127,8 @@ const commit = (e: { title: string; org: string; dates: string }) => {
         path.map((e, i) => (
           <li>
             <h3 class="item-title">
-              <span class="commit" aria-hidden="true">{commit(e)}</span>
-              {i === 0 && <span class="head" aria-hidden="true">(HEAD -&gt; main)</span>} {e.title}
+              <span class="commit" aria-hidden="true" translate="no">{commit(e)}</span>
+              {e.title}
             </h3>
             <p class="item-meta">
               <span>{e.org}</span> <span class="item-dates">{e.dates}</span>
@@ -158,7 +160,7 @@ const commit = (e: { title: string; org: string; dates: string }) => {
         <p>Email is the quickest way to reach me.</p>
         <p class="actions">
           <a class="button button-primary" href={`mailto:${EMAIL}`}>Email me</a>
-          <code>{EMAIL}</code>
+          <code translate="no">{EMAIL}</code>
         </p>
         <p>Or message me on <a href={linkedin}>LinkedIn</a>.</p>
       </div>

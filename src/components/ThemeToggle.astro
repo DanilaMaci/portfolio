@@ -47,12 +47,12 @@ const { class: className } = Astro.props;
 <style>
   /* Looks like the other nav links; the current theme is the highlighted word. */
   button {
-    display: flex; align-items: center; gap: var(--space-1); min-height: 2.5rem; padding: 0;
+    display: flex; align-items: center; gap: var(--space-1); min-height: 2.75rem; padding: 0;
     font: inherit; font-size: var(--text-sm); color: var(--color-muted); white-space: nowrap;
     background: none; border: 0; cursor: pointer;
   }
   span[data-opt] { padding: 0 var(--space-1); border: 1px solid transparent; border-radius: var(--radius); }
   button[aria-checked='true'] [data-opt='dark'],
   button[aria-checked='false'] [data-opt='light'] { color: var(--color-accent); border-color: var(--color-accent); }
-  button:hover span[data-opt] { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { button:hover span[data-opt] { text-decoration: underline; } }
 </style>

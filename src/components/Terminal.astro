@@ -19,7 +19,7 @@ const data = jsonForScript({ sections, projects, about, github, linkedin, skills
 const suggestions = ['help', 'ls', 'about', 'projects', 'contact'];
 ---
 
-<button type="button" class={className} data-terminal-open title="Open the terminal (Ctrl+`)" aria-haspopup="dialog">&gt;_ Terminal</button>
+<button type="button" class={className} data-terminal-open title="Open the terminal (Ctrl+`)" aria-haspopup="dialog"><span aria-hidden="true">&gt;_</span> Terminal</button>
 
 <dialog class="term" aria-label="Terminal" data-terminal>
   <div class="term-bar">
@@ -54,7 +54,7 @@ const suggestions = ['help', 'ls', 'about', 'projects', 'contact'];
   .term-log p { margin: 0 0 var(--space-1); white-space: pre-wrap; overflow-wrap: anywhere; }
   .term-log .term-echo { color: var(--color-muted); }
   .term-log .term-pre { white-space: pre; overflow-wrap: normal; } /* neofetch: keep the logo column aligned */
-  .term-log { overflow-x: auto; }
+  .term-log { overflow-x: auto; overscroll-behavior: contain; }
   .term-log a { color: var(--color-link); }
   .term-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-top: 1px solid var(--color-border); }
   .term-form { margin: 0; display: flex; align-items: center; border-top: 1px solid var(--color-border-strong); background: var(--color-surface); }
@@ -65,7 +65,8 @@ const suggestions = ['help', 'ls', 'about', 'projects', 'contact'];
   .term-form input:focus-visible { outline: 2px solid transparent; outline-offset: -2px; }
   .term-form:focus-within { border-top-color: var(--color-accent); }
   .term-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  @media (pointer: coarse) { .term-suggest button { min-height: 2.75rem; } } /* finger-sized */
+  @media (hover: hover) and (pointer: fine) { .term button:hover { border-color: var(--color-link); color: var(--color-link); } }
+  @media (pointer: coarse) { .term button { min-height: 2.75rem; } } /* finger-sized, incl. Close */
   @media (max-width: 39.99rem) {
     .term-close-more { display: none; } /* "Close" fits on one line on phones */
     .term { inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; border: 0; border-radius: 0; }

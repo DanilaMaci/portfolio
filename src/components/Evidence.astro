@@ -1,0 +1,10 @@
+---
+import { daysBetween, formatDate } from '../lib/evidence.mjs';
+const { command, since, checked } = Astro.props.evidence;
+const days = daysBetween(since, checked);
+---
+
+<div class="evidence">
+  <p class="prompt-line"><span aria-hidden="true">$ </span>{command}</p>
+  <p class="evidence-text"><span>logging since {formatDate(since)}</span><span>{days} day{days === 1 ? '' : 's'}</span><span>checked {formatDate(checked)}</span></p>
+</div>

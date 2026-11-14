@@ -67,6 +67,7 @@
   --color-error: #f7768e;
   --color-border: #545c7e; /* decorative: card edges, separators */
   --color-border-strong: #737aa2; /* form controls (>= 3:1) */
+  --color-on-accent: #1a1b26; /* text on a filled accent or link background */
 
   --font-mono: 'IBM Plex Mono', 'IBM Plex Mono Fallback', ui-monospace, monospace;
   --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Fallback', system-ui, sans-serif;
@@ -74,14 +75,19 @@
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.25rem;
+  --text-lg2: 1.5rem;
   --text-xl: 2rem;
   --text-2xl: 2.75rem;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
+  --space-2-5: 0.75rem;
   --space-3: 1rem;
+  --space-3-5: 1.5rem;
   --space-4: 2rem;
+  --space-4-5: 3rem;
   --space-5: 4rem;
+  --space-6: 6rem;
 
   --measure: 70ch; /* prose line length */
   --page-width: 62rem;
@@ -102,8 +108,9 @@
     --color-success: #3b6a1e;
     --color-warning: #875700;
     --color-error: #b0123e;
-    --color-border: #c3c7d8; /* decorative */
+    --color-border: #9ba1bb; /* decorative */
     --color-border-strong: #6b7194; /* form controls (>= 3:1) */
+    --color-on-accent: #f4f5f9;
   }
 }
 :root[data-theme="light"] {
@@ -117,6 +124,26 @@
   --color-success: #3b6a1e;
   --color-warning: #875700;
   --color-error: #b0123e;
-  --color-border: #c3c7d8; /* decorative */
+  --color-border: #9ba1bb; /* decorative */
   --color-border-strong: #6b7194; /* form controls (>= 3:1) */
+  --color-on-accent: #f4f5f9;
+}
+
+/* I2 print tokens: paper is light whatever the theme; same values as the light theme. Last, so it wins at equal specificity. */
+@media print {
+  :root, :root[data-theme="dark"], :root[data-theme="light"] {
+    color-scheme: light;
+    --color-bg: #f4f5f9;
+    --color-surface: #e8eaf2;
+    --color-text: #1f2335;
+    --color-muted: #4c5374;
+    --color-accent: #2e5cb8;
+    --color-link: #0b5c86;
+    --color-success: #3b6a1e;
+    --color-warning: #875700;
+    --color-error: #b0123e;
+    --color-border: #9ba1bb;
+    --color-border-strong: #6b7194;
+    --color-on-accent: #f4f5f9;
+  }
 }

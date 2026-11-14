@@ -48,6 +48,12 @@ test('a project slug that is not [a-z0-9-] is never turned into a URL', () => {
   assert.equal(run('open ../evil', bad).navigate, undefined);
 });
 
+test('a section id that is not [a-z0-9-] is never turned into a URL', () => {
+  const bad = { ...ctx, sections: [{ id: '//evil.example', title: 'X' }] };
+  assert.equal(run('open //evil.example', bad).navigate, undefined);
+  assert.equal(run('open x', bad).navigate, undefined);
+});
+
 test('cat about, about alias, cat errors', () => {
   assert.equal(texts(run('cat about', ctx)), ctx.about);
   assert.equal(texts(run('about', ctx)), ctx.about);
@@ -101,7 +107,7 @@ test('jsonForScript keeps "</script><img onerror=...>" inert and round-trips', (
 
 test('complete: unique, ambiguous, none', () => {
   assert.deepEqual(complete('he', ctx), ['help']);
-  assert.deepEqual(complete('c', ctx).sort(), ['cat', 'cd', 'clear', 'contact']);
+  assert.deepEqual(complete('c', ctx).sort(), ['cat', 'cd', 'clear', 'contact', 'cv']);
   assert.deepEqual(complete('zz', ctx), []);
   assert.deepEqual(complete('open be', ctx), ['open beta']);
   assert.deepEqual(complete('OPEN alpha', ctx), ['open alpha-rover', 'open alpha-data']);
@@ -166,4 +172,83 @@ test('easter eggs: sudo, rm, editors, whoami, git answer; hidden from help and T
   assert.match(help, /hidden/);
   assert.deepEqual(complete('neo', ctx), []);
   assert.deepEqual(complete('su', ctx), []);
+});
+
+// ---- I5: usability fixes ----
+const mctx = { ...ctx, projects: [...ctx.projects, { title: 'Mould Detect', slug: 'mould-detect', summary: 'Mould.' }] };
+
+test('open/cd: unique prefix opens the project or section; exact match still wins', () => {
+  const r = run('open mould', mctx);
+  assert.equal(r.navigate, '/projects/mould-detect/');
+  assert.equal(texts(r), 'Opening mould-detect...');
+  assert.equal(run('cd cont', mctx).navigate, '/#contact');
+  assert.equal(texts(run('cd cont', mctx)), 'Opening contact...');
+  const exact = { ...mctx, projects: [{ title: 'Al', slug: 'al', summary: '' }, { title: 'Alpha', slug: 'alpha', summary: '' }] };
+  assert.equal(run('open al', exact).navigate, '/projects/al/');
+  assert.equal(run('open about', mctx).navigate, '/#about');
+});
+
+test('open: ambiguous prefix lists candidates and opens nothing; no match still errors', () => {
+  const r = run('open alpha', mctx);
+  assert.equal(r.navigate, undefined);
+  assert.match(texts(r), /alpha-rover/);
+  assert.match(texts(r), /alpha-data/);
+  assert.match(texts(run('open zzz', mctx)), /no such section or project: zzz/);
+  assert.match(texts(run('open', mctx)), /^usage: open/);
+});
+
+test('unknown command close to a known one suggests it', () => {
+  assert.equal(texts(run('hlep', ctx)), 'command not found: hlep. Did you mean: help?');
+  assert.equal(texts(run('Projcts', ctx)), 'command not found: Projcts. Did you mean: projects?');
+  assert.equal(texts(run('thme', ctx)), 'command not found: thme. Did you mean: theme?');
+});
+
+test('suggestion threshold: 3 letters or fewer need distance 1; far words get the old message', () => {
+  assert.match(texts(run('lz', ctx)), /Did you mean: ls\?/);
+  assert.equal(texts(run('lxyz', ctx)), 'command not found: lxyz. Type help.');
+  assert.equal(texts(run('cx', ctx)), 'command not found: cx. Did you mean: cd, cv?');
+  assert.equal(texts(run('qqq', ctx)), 'command not found: qqq. Type help.');
+  assert.equal(texts(run('Frobnicate', ctx)), 'command not found: Frobnicate. Type help.');
+});
+
+test('hidden commands are never suggested', () => {
+  assert.ok(!texts(run('neofech', ctx)).includes('neofetch'));
+  assert.ok(!texts(run('whoam', ctx)).includes('whoami'));
+});
+
+test('theme: sets light/dark, bare shows current and usage, bad arg shows usage', () => {
+  assert.deepEqual(run('theme light', ctx).theme, 'light');
+  assert.equal(texts(run('theme light', ctx)), 'Theme: light.');
+  assert.equal(run('THEME dark', ctx).theme, 'dark');
+  assert.equal(texts(run('theme dark', ctx)), 'Theme: dark.');
+  const bare = run('theme', { ...ctx, currentTheme: 'dark' });
+  assert.equal(bare.theme, undefined);
+  assert.equal(texts(bare), 'Theme: dark. Usage: theme light|dark');
+  const bad = run('theme blue', ctx);
+  assert.equal(bad.theme, undefined);
+  assert.match(texts(bad), /usage: theme light\|dark/);
+});
+
+test('cv and print: print on the home page, hint elsewhere', () => {
+  const home = run('cv', { ...ctx, path: '/' });
+  assert.equal(home.print, true);
+  assert.equal(texts(home), 'Opening the print dialog. Choose "Save as PDF" for a one-page CV.');
+  assert.equal(run('print', { ...ctx, path: '/' }).print, true);
+  const away = run('cv', { ...ctx, path: '/projects/beta/' });
+  assert.equal(away.print, undefined);
+  assert.equal(texts(away), 'cv: go to the home page first (cd ~), then run cv.');
+});
+
+test('help and Tab completion list theme and cv', () => {
+  const out = texts(run('help', ctx));
+  assert.match(out, /theme light\|dark/);
+  assert.match(out, /\bcv\b/);
+  assert.deepEqual(complete('th', ctx), ['theme']);
+  assert.deepEqual(complete('cv', ctx), ['cv']);
+  assert.deepEqual(complete('theme d', ctx), ['theme dark']);
+  assert.deepEqual(complete('theme ', ctx).sort(), ['theme dark', 'theme light']);
+});
+
+test('cd ~ goes home', () => {
+  assert.equal(run('cd ~', ctx).navigate, '/');
 });

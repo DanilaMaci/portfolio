@@ -5,11 +5,11 @@ import { contrast, parseTokens, parseThemes, evaluate } from '../scripts/check-c
 import { tempProject, runScript } from './helpers.mjs';
 
 const GOOD = `:root { --color-bg:#111111; --color-surface:#1c1c1c; --color-text:#e8e8e8; --color-muted:#a8a8a8;
-  --color-accent:#9ad0b4; --color-link:#9db9f0; --color-success:#8fd69a; --color-warning:#e0be6a; --color-error:#f09a94;
+  --color-accent:#9ad0b4; --color-on-accent:#111111; --color-link:#9db9f0; --color-success:#8fd69a; --color-warning:#e0be6a; --color-error:#f09a94;
   --color-border:#707070; --color-border-strong:#909090; }`;
 const errors = (css) => evaluate(css).errors;
 const LIGHT = `--color-bg:#f4f4f4; --color-surface:#e6e6e6; --color-text:#111111; --color-muted:#444444;
-  --color-accent:#1a3f99; --color-link:#0b4f77; --color-success:#2d5a14; --color-warning:#6e4600; --color-error:#9a0f36;
+  --color-accent:#1a3f99; --color-on-accent:#f4f4f4; --color-link:#0b4f77; --color-success:#2d5a14; --color-warning:#6e4600; --color-error:#9a0f36;
   --color-border:#c0c0c0; --color-border-strong:#666666;`;
 const TWO = (media = LIGHT, attr = LIGHT) => `${GOOD}
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { ${media} } }
@@ -51,6 +51,16 @@ test('themes: dark only, two identical light blocks, one light block, unknown se
   assert.throws(() => parseThemes(GOOD + '.x { --color-bg: #fff; }'), /unknown selector/);
   assert.throws(() => parseThemes(GOOD + ':root[data-theme="light"] { ' + LIGHT + ' }'), /needs both/);
   assert.throws(() => parseThemes(TWO(LIGHT, LIGHT.replace('#f4f4f4', '#f5f5f5'))), /drift/);
+  // print block: accepted only when it repeats the light tokens exactly, and only once
+  const PRINT = (body) => `@media print { :root, :root[data-theme="dark"], :root[data-theme="light"] { ${body} } }`;
+  assert.deepEqual(parseThemes(TWO() + PRINT(LIGHT)).light, parseThemes(TWO()).light);
+  assert.throws(() => parseThemes(TWO() + PRINT(LIGHT.replace('#444444', '#bbbbbb'))), /print block differs/);
+  assert.throws(() => parseThemes(GOOD + PRINT(LIGHT)), /print block differs/);
+  assert.throws(() => parseThemes(TWO() + PRINT(LIGHT) + PRINT(LIGHT)), /unknown selector/);
+  // the same selector list outside @media print (or inside another at-rule) is not a print block
+  const BARE = `:root, :root[data-theme="dark"], :root[data-theme="light"] { ${LIGHT} }`;
+  assert.throws(() => parseThemes(TWO() + BARE), /unknown selector/);
+  assert.throws(() => parseThemes(TWO() + `@media screen { ${BARE} }`), /unknown selector/);
 });
 
 test('both themes are checked and named in the table; a light-only failure fails', () => {
@@ -83,6 +93,20 @@ test('the real tokens.css passes in both themes', () => {
   const r = evaluate(readFileSync('src/styles/tokens.css', 'utf8'));
   assert.deepEqual(r.errors, []);
   assert.ok(r.lines.some((l) => l.startsWith('light')));
+});
+
+test('real tokens: --color-on-accent in all three blocks, >= 4.5 on accent and on link, light border #9ba1bb', () => {
+  const css = readFileSync('src/styles/tokens.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  // the colour blocks in file order: dark :root, light media block, light [data-theme="light"], print (= light)
+  const blocks = [...css.matchAll(/\{([^{}]*--color-[^{}]*)\}/g)].map((m) => parseTokens(m[1]));
+  assert.equal(blocks.length, 4, 'expected four colour token blocks (dark, two light, print)');
+  const [dark, ...light] = blocks;
+  for (const [i, b] of blocks.entries()) {
+    assert.ok(b['on-accent'], `--color-on-accent missing in block ${i + 1} of 4`);
+    for (const under of ['accent', 'link']) assert.ok(contrast(b['on-accent'] ?? '#000000', b[under]) >= 4.5, `on-accent on ${under}, block ${i + 1}`);
+  }
+  for (const b of light) assert.equal(b.border, '#9ba1bb');
+  assert.ok(dark.bg);
 });
 
 test('negative control: script exits 1 on low contrast, a duplicate token, drifting light blocks, an unknown token', () => {

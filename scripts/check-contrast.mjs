@@ -45,14 +45,20 @@ const SELECTORS = {
   ':root[data-theme="light"]': 'light',
   ':root:not([data-theme="dark"])': 'light (media)',
 };
+// Optional block inside `@media print`: paper is light whatever the theme, so it must repeat the light tokens exactly.
+const PRINT = ':root, :root[data-theme="dark"], :root[data-theme="light"]';
 
 // Returns { dark, light } token maps (light is null when the css has no light block). Throws on an unknown selector
 // that holds colour tokens, a duplicate selector, a missing or drifting light block.
 export function parseThemes(css) {
   const blocks = {};
-  for (const [, sel, body] of stripComments(css).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+  const text = stripComments(css);
+  for (const m of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const [, sel, body] = m;
     if (!body.includes('--color-')) continue;
+    const inPrint = /@media\s+print\s*\{\s*$/.test(text.slice(0, m.index));
     const key = sel.trim().split('\n').pop().trim().replace(/\s+/g, ' ');
+    if (key === PRINT && inPrint && !blocks.print) { blocks.print = parseTokens(body); continue; }
     if (!(key in SELECTORS)) throw new Error(`colour tokens under unknown selector "${key}"; expected :root, :root[data-theme="light"] or the prefers-color-scheme block`);
     if (key in blocks) throw new Error(`${key} holds colour tokens twice`);
     blocks[key] = parseTokens(body);
@@ -64,6 +70,9 @@ export function parseThemes(css) {
   if (light.length === 2 && JSON.stringify(sortKeys(blocks[names[1]])) !== JSON.stringify(sortKeys(blocks[names[2]]))) {
     throw new Error('the two light blocks differ (drift); they must be identical');
   }
+  if (blocks.print && JSON.stringify(sortKeys(blocks.print)) !== JSON.stringify(sortKeys(blocks[names[1]] ?? {}))) {
+    throw new Error('the print block differs from the light theme; it must repeat the light tokens exactly');
+  }
   return { dark: blocks[names[0]], light: light.length ? blocks[names[1]] : null };
 }
 const sortKeys = (o) => Object.entries(o).sort(([a], [b]) => (a < b ? -1 : 1));
@@ -74,6 +83,7 @@ const MATRIX = [
   ...TEXT.map((token) => ({ token, min: 4.5 })),
   { token: 'border-strong', min: 3.0 }, // form controls
   { token: 'border', min: null },
+  { token: 'on-accent', min: null }, // text on a filled accent/link button; the pair is tested in tests/contrast.test.mjs
 ];
 const BACKGROUNDS = ['bg', 'surface'];
 

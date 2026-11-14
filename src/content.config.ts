@@ -52,10 +52,15 @@ const projects = defineCollection({
           .optional(),
         // Extra links (a write-up, a PDF, a video hosted elsewhere).
         links: z.array(z.object({ label: z.string(), url: z.url({ protocol: /^https$/ }) })).optional(),
+        // One dated "it runs" line under the title links. The day count is computed from `since` to `checked` at build.
+        evidence: z.object({ command: z.string(), since: z.date(), checked: z.date() }).optional(),
+        // Name of an architecture diagram component: `mould-detect` -> src/components/diagrams/MouldDetect.astro
+        diagram: z.string().regex(/^[a-z]+(-[a-z]+)*$/).optional(),
         order: z.number(),
         draft: z.boolean().default(false),
       })
       .refine((d) => d.draft || d.live || d.repo, { message: 'projects go on the site only once live or with a public repo', path: ['live'] })
+      .refine((d) => !d.evidence || d.evidence.checked >= d.evidence.since, { message: 'evidence.checked must not be before evidence.since', path: ['evidence'] })
       .refine((d) => !d.image || d.imageAlt, { message: 'imageAlt is required when image is set', path: ['imageAlt'] }),
 });
 

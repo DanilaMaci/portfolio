@@ -1,9 +1,11 @@
 ---
 import '../styles/tokens.css';
 import '../styles/global.css';
+import '../styles/print.css';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Terminal from '../components/Terminal.astro';
 import { sections, about, github, linkedin } from '../lib/site';
+import { buildFacts as facts, statusSegments } from '../lib/build.mjs';
 
 interface Props {
   title: string;
@@ -11,6 +13,7 @@ interface Props {
 }
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const status = statusSegments({ hash: facts.hash, branch: facts.branch, date: facts.date, checks: facts.names.length });
 // Same URLs as the @font-face rules in tokens.css, so the preloaded files are reused, not fetched twice.
 const preloads = ['/fonts/ibm-plex-mono-latin-400-normal.woff2', '/fonts/ibm-plex-sans-latin-400-normal.woff2'];
 ---
@@ -36,6 +39,7 @@ const preloads = ['/fonts/ibm-plex-mono-latin-400-normal.woff2', '/fonts/ibm-ple
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1b26" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f5f9" />
     <script is:inline src="/theme-init.js"></script>
+    <script is:inline src="/morph-init.js"></script>
     {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
@@ -54,6 +58,10 @@ const preloads = ['/fonts/ibm-plex-mono-latin-400-normal.woff2', '/fonts/ibm-ple
     <main id="main"><slot /></main>
     <footer class="site-footer">
       <p>Danila Macijauskas · Static site built with Astro · No cookies, no tracking</p>
+      <p class="status-line">
+        {status.map((s) => <span class={s.cls || undefined} translate={s.cls ? 'no' : undefined}>{s.text}</span>)}
+        <span><a href="/colophon/">how this site is checked</a></span>
+      </p>
     </footer>
     <script>
       import '../scripts/transition.ts';

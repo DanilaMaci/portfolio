@@ -12,10 +12,10 @@ const astroDir = new URL('../dist/_astro/', import.meta.url);
 const photoAssets =
   photoFile && existsSync(astroDir) ? readdirSync(astroDir).filter((f) => f.startsWith(photoFile.replace(/\.[^.]+$/, ''))) : [];
 
-test('sections are about, projects, path, skills, contact, each a visible h2', () => {
+test('sections are projects, about, path, skills, contact, each a visible h2', () => {
   assert.deepEqual(
     ctx.sections.map((s) => s.id),
-    ['about', 'projects', 'path', 'skills', 'contact'],
+    ['projects', 'about', 'path', 'skills', 'contact'],
   );
   for (const { id, title } of ctx.sections) assert.match(html, new RegExp(`<h2[^>]*id="${id}"[^>]*>${title}</h2>`));
   assert.doesNotMatch(html, /id="(education|experience)"/);
